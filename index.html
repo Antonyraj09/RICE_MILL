@@ -1,0 +1,1502 @@
+<!DOCTYPE html>
+<html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1"><title>Rice Mill Manager</title>
+<link rel="manifest" href="manifest.webmanifest"><meta name="theme-color" content="#1c5cab"><link rel="icon" href="icon.svg"><link rel="apple-touch-icon" href="icon-192.png"><meta name="apple-mobile-web-app-capable" content="yes">
+<style id="app-css">
+:root{color-scheme:light;--bg:#f4f3ef;--surface:#fcfcfb;--surface-2:#f0efe9;--border:#e2e0d8;--text:#0b0b0b;--text-2:#52514e;--muted:#8a8984;--accent:#1c5cab;--accent-ink:#fff;--accent-soft:#e3eefb;--s1:#2a78d6;--s2:#eb6834;--s3:#1baf7a;--s4:#eda100;--s5:#e87ba4;--good:#0f7b3e;--good-bg:#e4f4ea;--warn:#9a6200;--warn-bg:#fdf1d8;--crit:#b42318;--crit-bg:#fde7e5;--grid:#e9e7e0;--shadow:0 1px 2px rgba(0,0,0,.04),0 2px 8px rgba(0,0,0,.04)}
+@media (prefers-color-scheme:dark){:root{color-scheme:dark;--bg:#121211;--surface:#1a1a19;--surface-2:#232321;--border:#33332f;--text:#f0efec;--text-2:#c3c2b7;--muted:#8d8c85;--accent:#5598e7;--accent-ink:#0b0b0b;--accent-soft:#1d2c40;--s1:#3987e5;--s2:#d95926;--s3:#199e70;--s4:#c98500;--s5:#d55181;--good:#4cc27e;--good-bg:#173323;--warn:#e6b04a;--warn-bg:#3a2d12;--crit:#f07b70;--crit-bg:#3d1a17;--grid:#2b2b28;--shadow:none}}
+*{box-sizing:border-box}
+html,body{margin:0;background:var(--bg);color:var(--text);font:14px/1.45 ui-sans-serif,system-ui,-apple-system,"Segoe UI",Roboto,"Noto Sans",sans-serif}
+button,input,select{font:inherit;color:inherit}
+.top{position:sticky;top:0;z-index:20;background:var(--surface);border-bottom:1px solid var(--border)}
+.bar{display:flex;align-items:center;gap:12px;padding:10px 20px;max-width:1320px;margin:0 auto}
+.brand{display:flex;align-items:center;gap:10px;font-weight:650;font-size:16px;white-space:nowrap}
+.brand svg{flex:none}
+.brand small{display:block;font-weight:400;color:var(--muted);font-size:12px}
+.spacer{flex:1}
+.save{display:flex;align-items:center;gap:8px}
+.pill{font-size:12px;padding:3px 9px;border-radius:999px;background:var(--surface-2);color:var(--text-2);white-space:nowrap}
+.pill.dirty{background:var(--warn-bg);color:var(--warn)}
+.pill.ok{background:var(--good-bg);color:var(--good)}
+nav.tabs{display:flex;gap:2px;padding:0 14px;max-width:1320px;margin:0 auto;overflow-x:auto;scrollbar-width:none}
+nav.tabs a{padding:9px 12px;text-decoration:none;color:var(--text-2);border-bottom:2px solid transparent;white-space:nowrap;font-weight:500}
+nav.tabs a:hover{color:var(--text)}
+nav.tabs a.on{color:var(--accent);border-bottom-color:var(--accent)}
+main{max-width:1320px;margin:0 auto;padding:20px}
+h1{font-size:20px;margin:0 0 4px}
+h2{font-size:15px;margin:0 0 12px}
+.sub{color:var(--text-2);margin:0 0 18px}
+.grid{display:grid;gap:16px}
+.g2{grid-template-columns:repeat(auto-fit,minmax(420px,1fr))}
+.g3{grid-template-columns:repeat(auto-fit,minmax(300px,1fr))}
+.kpis{display:grid;gap:12px;grid-template-columns:repeat(auto-fit,minmax(180px,1fr));margin-bottom:16px}
+.card{background:var(--surface);border:1px solid var(--border);border-radius:10px;padding:16px;box-shadow:var(--shadow);min-width:0}
+.kpi .l{color:var(--text-2);font-size:12.5px}
+.kpi .v{font-size:24px;font-weight:650;margin:2px 0;font-variant-numeric:tabular-nums;letter-spacing:-.01em}
+.kpi .d{font-size:12px;color:var(--muted)}
+.btn{border:1px solid var(--border);background:var(--surface);padding:7px 13px;border-radius:7px;cursor:pointer;font-weight:500;white-space:nowrap}
+.btn:hover{background:var(--surface-2)}
+.qa a.btn{display:block;text-decoration:none;color:var(--text)}
+.btn.primary{background:var(--accent);color:var(--accent-ink);border-color:var(--accent)}
+.btn.primary:hover{filter:brightness(1.08)}
+.btn.sm{padding:4px 9px;font-size:12.5px}
+.btn.danger{color:var(--crit)}
+.btn:disabled{opacity:.5;cursor:not-allowed}
+.row{display:flex;gap:8px;flex-wrap:wrap;align-items:center}
+table{width:100%;border-collapse:collapse;font-variant-numeric:tabular-nums}
+th,td{padding:7px 8px;border-bottom:1px solid var(--border);text-align:left;white-space:nowrap}
+th{font-size:12px;color:var(--text-2);font-weight:600;background:var(--surface-2);position:sticky;top:0}
+td.n,th.n{text-align:right}
+tr.click{cursor:pointer}
+tr.click:hover td,tr.sel td{background:var(--accent-soft)}
+tfoot td{font-weight:650;border-top:2px solid var(--border)}
+.tw{overflow:auto;max-height:520px;border:1px solid var(--border);border-radius:8px}
+.tw table th:first-child,.tw table td:first-child{padding-left:12px}
+.form{display:grid;grid-template-columns:repeat(auto-fill,minmax(150px,1fr));gap:10px 12px}
+.f label{display:block;font-size:12px;color:var(--text-2);margin-bottom:3px;font-weight:500}
+.f input,.f select{width:100%;padding:7px 9px;border:1px solid var(--border);border-radius:7px;background:var(--surface)}
+.f input:focus,.f select:focus{outline:2px solid var(--accent);outline-offset:-1px;border-color:transparent}
+.f .hint{font-size:11.5px;color:var(--muted);margin-top:2px}
+.calc{margin-top:14px;background:var(--surface-2);border-radius:8px;padding:12px 14px;display:grid;grid-template-columns:repeat(auto-fill,minmax(150px,1fr));gap:10px 14px}
+.calc .l{font-size:12px;color:var(--text-2)}
+.calc .v{font-size:16px;font-weight:650;font-variant-numeric:tabular-nums}
+.calc .v.big{font-size:20px;color:var(--accent)}
+.tag{display:inline-flex;align-items:center;gap:4px;font-size:12px;padding:2px 8px;border-radius:999px;font-weight:500}
+.tag.good{background:var(--good-bg);color:var(--good)}
+.tag.warn{background:var(--warn-bg);color:var(--warn)}
+.tag.crit{background:var(--crit-bg);color:var(--crit)}
+.tag.neutral{background:var(--surface-2);color:var(--text-2)}
+.alert{display:flex;gap:10px;align-items:flex-start;padding:9px 0;border-bottom:1px solid var(--border)}
+.alert:last-child{border-bottom:0}
+.muted{color:var(--muted)}
+.chart{position:relative;height:280px}
+.chart.tall{height:340px}
+.legend{display:flex;gap:14px;flex-wrap:wrap;font-size:12.5px;color:var(--text-2);margin:-4px 0 8px}
+.legend i{display:inline-block;width:10px;height:10px;border-radius:3px;margin-right:5px;vertical-align:-1px}
+.legend i.dash{height:0;border-top:2px dashed var(--muted);border-radius:0;width:14px;vertical-align:3px}
+.insights{margin:0;padding:0;list-style:none}
+.insights li{display:flex;gap:10px;padding:9px 0;border-bottom:1px solid var(--border)}
+.insights li:last-child{border:0}
+.ic{flex:none;width:22px;height:22px;border-radius:6px;display:grid;place-items:center;font-size:13px;font-weight:700}
+.ic.good{background:var(--good-bg);color:var(--good)}.ic.warn{background:var(--warn-bg);color:var(--warn)}.ic.crit{background:var(--crit-bg);color:var(--crit)}.ic.info{background:var(--accent-soft);color:var(--accent)}
+.seg{display:inline-flex;border:1px solid var(--border);border-radius:8px;overflow:hidden}
+.seg button{border:0;background:var(--surface);padding:6px 11px;cursor:pointer;color:var(--text-2);font-weight:500}
+.seg button.on{background:var(--accent);color:var(--accent-ink)}
+.toast{position:fixed;bottom:20px;left:50%;transform:translateX(-50%);background:var(--text);color:var(--surface);padding:9px 16px;border-radius:8px;z-index:50;font-size:13px;opacity:0;transition:opacity .2s;pointer-events:none}
+.toast.show{opacity:1}
+.mix{display:flex;height:26px;border-radius:6px;overflow:hidden;gap:2px;margin:6px 0 8px}
+.mix div{height:100%}
+.sec-h{display:flex;justify-content:space-between;align-items:center;gap:10px;margin-bottom:12px;flex-wrap:wrap}
+.sec-h h2{margin:0}
+.stack>*+*{margin-top:16px}
+.qa{display:grid;grid-template-columns:1fr 1fr;gap:8px}
+.qa .btn{text-align:left;padding:10px 12px}
+.qa .btn b{display:block}
+.qa .btn span{font-size:12px;color:var(--muted);font-weight:400}
+.modal{position:fixed;inset:0;background:rgba(0,0,0,.4);display:grid;place-items:center;z-index:60;padding:20px}
+.modal .card.wide{max-width:900px}
+.lic-banner{padding:10px 14px;border-radius:8px;margin-bottom:16px;font-size:13.5px}
+.lic-banner.warn{background:var(--warn-bg);color:var(--warn)}
+.lic-banner.crit{background:var(--crit-bg);color:var(--crit)}
+.lic-banner a{color:inherit;font-weight:600}
+body.ro #main .btn.primary:not(.ro-ok){opacity:.45}
+.link{cursor:pointer;transition:border-color .15s,box-shadow .15s}
+.card.link:hover,.card.link:focus-visible{border-color:var(--accent);box-shadow:0 0 0 1px var(--accent)}
+.card.kpi.link{position:relative}.card.kpi.link::after{content:'›';position:absolute;right:14px;top:12px;color:var(--muted);font-size:18px}
+.alert.link{border-radius:8px;margin:0 -8px;padding:9px 8px}.alert.link:hover,.alert.link:focus-visible{background:var(--accent-soft)}
+.go-arrow{margin-left:auto;color:var(--muted);font-size:18px;align-self:center}
+[data-go]:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
+@keyframes flashbg{0%,40%{background:var(--accent-soft)}100%{background:transparent}}
+tr.flash td{animation:flashbg 2.6s ease-out}.card.flash{animation:flashring 2.6s ease-out}
+@keyframes flashring{0%,40%{box-shadow:0 0 0 3px var(--accent)}100%{box-shadow:var(--shadow)}}
+.acc{display:grid;gap:16px;grid-template-columns:minmax(0,1.9fr) minmax(300px,1fr)}
+@media (max-width:1050px){.acc{grid-template-columns:1fr}}
+.modal iframe{width:100%;height:60vh;border:1px solid var(--border);border-radius:8px;background:#fff}
+.modal .card{max-width:640px;width:100%;max-height:85vh;overflow:auto}
+textarea{width:100%;min-height:200px;font:12px ui-monospace,monospace;border:1px solid var(--border);border-radius:7px;padding:8px;background:var(--surface-2);color:var(--text)}
+@media (max-width:640px){.bar{flex-wrap:wrap;row-gap:8px}.save{width:100%;justify-content:space-between}.pill{white-space:normal}main{padding:14px}.g2{grid-template-columns:1fr}.bar{padding:10px 14px}.brand small{display:none}.kpi .v{font-size:20px}}
+@media print{.top,.noprint{display:none!important}main{max-width:none}.card{box-shadow:none;break-inside:avoid}}
+</style>
+<script src="vendor/chart.umd.min.js"></script>
+</head><body><div id="app"><div id="nojs" style="max-width:520px;margin:32px auto;padding:22px;font:15px/1.55 system-ui,-apple-system,Segoe UI,Roboto,sans-serif;color:#1a1a1a;background:#fff;border:1px solid #ddd;border-radius:12px">
+<h2 style="margin:0 0 6px;font-size:20px">Rice Mill Manager</h2>
+<p style="margin:0 0 14px;color:#b42318"><b>This screen can't run the app.</b> The file was opened in a preview or file viewer that doesn't run apps.</p>
+<p style="margin:0 0 8px"><b>Android:</b> open the file in <b>Chrome</b>. In WhatsApp or Files, tap <b>⋮</b> (three dots) → <b>Open with</b> → <b>Chrome</b>.</p>
+<p style="margin:0 0 8px"><b>iPhone:</b> iPhones can't run app files. Ask for the app <b>link</b> instead, and open it in Safari.</p>
+<p style="margin:0;color:#666;font-size:13px">On a computer, open the file with Chrome, Edge or Firefox.</p></div></div>
+<script id="state" type="application/json">null</script>
+<script id="app-js">
+(function(){
+"use strict";
+const TITLE='Rice Mill Manager';
+const BUILD='pwa'; // 'pwa' in the offline app package
+const TRIAL_DAYS=30;
+const STATIC_HOST=true; // true when hosted on a plain website (no sync server behind it)  // free trial length when no licence key is applied
+/* ---------- utilities ---------- */
+const $=s=>document.querySelector(s);
+const esc=s=>String(s==null?'':s).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+const num=(v,d=0)=>(isFinite(v)?v:0).toLocaleString('en-IN',{minimumFractionDigits:d,maximumFractionDigits:d});
+const inr=(v,d=0)=>'₹'+num(v,d);
+const inrC=v=>{const a=Math.abs(v),s=v<0?'−':'';if(a>=1e7)return s+'₹'+(a/1e7).toFixed(2)+' Cr';if(a>=1e5)return s+'₹'+(a/1e5).toFixed(2)+' L';return s+'₹'+num(a)};
+const qtl=kg=>num(kg/100,1);
+const pct=(v,d=1)=>(isFinite(v)?v:0).toFixed(d)+'%';
+const today=()=>{const d=new Date();return d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0')+'-'+String(d.getDate()).padStart(2,'0')};
+const ym=d=>d.slice(0,7);
+const monthName=k=>{const [y,m]=k.split('-');return ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'][+m-1]+' '+y.slice(2)};
+const fmtDate=d=>{const [y,m,dd]=d.split('-');return dd+' '+['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'][+m-1]};
+const sum=(a,f)=>a.reduce((s,x)=>s+(f?f(x):x),0);
+const F=id=>{const e=document.getElementById(id);return e?parseFloat(e.value)||0:0};
+const V=id=>{const e=document.getElementById(id);return e?e.value:''};
+function toast(msg){const t=$('#toast');t.textContent=msg;t.classList.add('show');clearTimeout(toast._t);toast._t=setTimeout(()=>t.classList.remove('show'),2200)}
+function mulberry32(a){return function(){a|=0;a=a+0x6D2B79F5|0;let t=Math.imul(a^a>>>15,1|a);t=t+Math.imul(t^t>>>7,61|t)^t;return((t^t>>>14)>>>0)/4294967296}}
+
+/* ---------- settings & seed data ---------- */
+function defaultSettings(){
+  const varieties=['Sona Masoori','Ponni','BPT 5204','IR 64'];
+  return {
+    millName:'Sri Lakshmi Rice Mill',location:'Demo data · edit in Settings',
+    varieties,
+    stdMoisture:14,moistureFactor:1,tarePerBag:0.6,hamaliPerBag:6,
+    processingCost:145,  // ₹ per quintal of paddy (power, labour, maintenance, overheads)
+    paddyBagKg:75,riceBagKg:25,
+    target:{head:66,broken:5,bran:8,husk:20},
+    yieldByVariety:{'Sona Masoori':65.5,'Ponni':66.5,'BPT 5204':64.5,'IR 64':67.5},
+    prices:{
+      paddy:{'Sona Masoori':2620,'Ponni':2480,'BPT 5204':2540,'IR 64':2320},
+      rice:{'Sona Masoori':4850,'Ponni':4550,'BPT 5204':4650,'IR 64':4000},
+      broken:2650,bran:1950,husk:480
+    },
+    gst:{rice:5,broken:5,bran:5,husk:0},
+    reorder:{paddy:25000,rice:6000,broken:0,bran:0,husk:0},
+    opening:{},
+    firm:{gstin:'33DEMOM1111M1Z2',address:'Main Road, Thanjavur, Tamil Nadu 613001',stateCode:'33',phone:'',bank:'',invPrefix:'INV/26-27/',billPrefix:'PB/26-27/'},
+    hsn:{paddy:'1006 10',rice:'1006 30',broken:'1006 40',bran:'2302 40',husk:'1213'},
+    creditDays:30,
+    cmr:{otRaw:67,otBoiled:68,chargePerQtl:50},
+    installedOn:'',lastSeen:'',licence:''
+  };
+}
+const STATES={'01':'Jammu & Kashmir','03':'Punjab','06':'Haryana','07':'Delhi','08':'Rajasthan','09':'Uttar Pradesh','10':'Bihar','18':'Assam','19':'West Bengal','20':'Jharkhand','21':'Odisha','22':'Chhattisgarh','23':'Madhya Pradesh','24':'Gujarat','27':'Maharashtra','29':'Karnataka','32':'Kerala','33':'Tamil Nadu','34':'Puducherry','36':'Telangana','37':'Andhra Pradesh'};
+function itemKeys(s){return [...s.varieties.map(v=>'paddy:'+v),...s.varieties.map(v=>'rice:'+v),'broken','bran','husk']}
+function itemName(k){if(k.startsWith('paddy:'))return 'Paddy · '+k.slice(6);if(k.startsWith('rice:'))return 'Rice · '+k.slice(5);return {broken:'Broken rice',bran:'Rice bran',husk:'Husk'}[k]||k}
+function itemCat(k){return k.startsWith('paddy:')?'Paddy':k.startsWith('rice:')?'Rice':'By-product'}
+function seed(){
+  const r=mulberry32(20261110),S=defaultSettings(),V=S.varieties;
+  const pick=a=>a[Math.floor(r()*a.length)];
+  const st={v:2,savedAt:null,settings:S,purchases:[],batches:[],sales:[],adjustments:[],payments:[],parties:[],cmr:{lots:[],deliveries:[]},seq:1,invSeq:1,billSeq:1};
+  S.installedOn='2026-11-10';
+  V.forEach(v=>{S.opening['paddy:'+v]=32000;S.opening['rice:'+v]=7000});
+  S.opening.broken=1800;S.opening.bran=1500;S.opening.husk=4000;
+  const stock={...S.opening};
+  const sup=[['Kaveri Growers FPO',0],['Ramesh Farms',0.4],['Lakshmi Traders',1.6],['Murugan & Sons',0.2],['Sri Venkatesa Agro',0.8],['Gopal Reddy',2.4]];
+  const cust=['Annapoorna Supermart','Metro Wholesale','Sai Kirana Stores','Hotel Saravana Bhavan','Bharat Rice Depot','Green Valley Foods','Krishna Provisions'];
+  const bp={broken:'Poultry Feeds Co',bran:'Ravi Oil Mills',husk:'Shakti Boilers'};
+  const start=new Date(2026,7,1),end=new Date(2026,10,9);
+  for(let d=new Date(start);d<=end;d.setDate(d.getDate()+1)){
+    if(d.getDay()===0)continue;
+    const ds=d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0')+'-'+String(d.getDate()).padStart(2,'0');
+    const month=d.getMonth();
+    // purchases (more in harvest Oct–Nov)
+    const np=r()<(month>=9?0.75:0.5)?(r()<0.3?2:1):0;
+    for(let i=0;i<np;i++){
+      const [name,mbias]=pick(sup),v=pick(V);
+      const bags=Math.round(80+r()*240),gross=Math.round(bags*(74+r()*3)+bags*S.tarePerBag);
+      const moist=+Math.min(21,13+r()*3.5+mbias+(month>=9?0.8:0)).toFixed(1);
+      const rate=Math.round((S.prices.paddy[v]+(r()-0.5)*120-(mbias>1.5?40:0))/5)*5;
+      const p=calcPurchase(S,{gross,bags,moist,rate});
+      st.purchases.push({id:'P'+st.seq++,billNo:S.firm.billPrefix+String(st.billSeq++).padStart(4,'0'),date:ds,supplier:name,variety:v,bags,grossKg:gross,tarePerBag:S.tarePerBag,moisture:moist,rate,netKg:p.net,amount:p.amount,hamali:p.hamali});
+      stock['paddy:'+v]+=p.net;
+    }
+    // milling
+    if(r()<0.7){
+      const v=pick(V);const kg=Math.round((9000+r()*11000)/500)*500;
+      if(stock['paddy:'+v]>=kg){
+        const lowMonth=(v==='BPT 5204'&&month===9)?-2.2:0;
+        const head=S.yieldByVariety[v]+(r()-0.5)*3+lowMonth,br=4.2+r()*2.6-lowMonth*0.6,bn=7.4+r()*1.2,hu=100-head-br-bn-(0.6+r()*1.1);
+        const b={id:'B'+st.seq++,date:ds,variety:v,paddyKg:kg,headKg:Math.round(kg*head/100),brokenKg:Math.round(kg*br/100),branKg:Math.round(kg*bn/100),huskKg:Math.round(kg*hu/100)};
+        st.batches.push(b);stock['paddy:'+v]-=kg;stock['rice:'+v]+=b.headKg;stock.broken+=b.brokenKg;stock.bran+=b.branKg;stock.husk+=b.huskKg;
+      }
+    }
+    // rice sales
+    const ns=r()<0.8?1+Math.floor(r()*2.4):0;
+    for(let i=0;i<ns;i++){
+      const v=pick(V),key='rice:'+v,c=pick(cust);const kg=Math.round(40+r()*200)*S.riceBagKg;
+      if(stock[key]-kg<1500)continue;
+      const rate=Math.round((S.prices.rice[v]+(r()-0.45)*220)/10)*10;
+      st.sales.push(mkSale(st,ds,c,key,kg,rate,S.gst.rice));stock[key]-=kg;
+    }
+    // by-product sales on Saturdays
+    if(d.getDay()===6){['broken','bran','husk'].forEach(k=>{const kg=Math.floor(stock[k]*(0.75+r()*0.2)/100)*100;if(kg>0){const rate=Math.round(S.prices[k]*(0.96+r()*0.08)/10)*10;st.sales.push(mkSale(st,ds,bp[k],k,kg,rate,S.gst[k]));stock[k]-=kg}})}
+  }
+  // parties
+  const gst={'Metro Wholesale':['32DEMOB2345B1Z3','32'],'Annapoorna Supermart':['33DEMOC3456C1Z1','33'],'Green Valley Foods':['29DEMOD4567D1Z8','29'],'Bharat Rice Depot':['33DEMOE5678E1Z6','33'],'Ravi Oil Mills':['33DEMOF6789F1Z4','33']};
+  sup.forEach(([n])=>st.parties.push({name:n,kind:'supplier',gstin:'',stateCode:'33',phone:'',address:''}));
+  [...cust,...Object.values(bp)].forEach(n=>st.parties.push({name:n,kind:'customer',gstin:(gst[n]||[''])[0],stateCode:(gst[n]||[0,'33'])[1],phone:'',address:''}));
+  st.sales.forEach(x=>{const p=st.parties.find(q=>q.name===x.customer);x.inter=!!(p&&p.stateCode!==S.firm.stateCode)});
+  // payments
+  const endS='2026-11-09',add=(ds,n)=>{const d=new Date(ds+'T00:00:00');d.setDate(d.getDate()+n);return d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0')+'-'+String(d.getDate()).padStart(2,'0')};
+  const modes=['Bank transfer','UPI','Cheque','Cash'];
+  st.purchases.forEach(p=>{const d=add(p.date,3+Math.floor(r()*10));if(d>endS)return;const part=r()<0.12;st.payments.push({id:'',date:d,party:p.supplier,kind:'pay',amount:part?Math.round(p.amount*0.5/1000)*1000:p.amount,mode:pick(modes),ref:p.billNo,note:part?'Part payment':''})});
+  st.parties.push({name:'Selvam K (farmer)',kind:'supplier',gstin:'',stateCode:'33',phone:'',address:'Orathanadu'});st.payments.push({id:'',date:'2026-11-07',party:'Selvam K (farmer)',kind:'pay',amount:150000,mode:'Bank transfer',ref:'ADV-01',note:'Advance against harvest paddy'});
+  st.sales.forEach(x=>{const slow=x.customer==='Hotel Saravana Bhavan';const bpc=!x.item.startsWith('rice:');const d=add(x.date,bpc?0:(slow?35+Math.floor(r()*45):4+Math.floor(r()*30)));if(d>endS||(slow&&r()<0.25))return;st.payments.push({id:'',date:d,party:x.customer,kind:'receive',amount:x.total,mode:bpc?'Cash':pick(modes),ref:x.invoiceNo,note:''})});
+  st.payments.sort((a,b)=>a.date.localeCompare(b.date)).forEach(x=>x.id=(x.kind==='pay'?'PY':'RC')+st.seq++);
+  // custom milling (CMR)
+  const ag='Civil Supplies Corp. (CMR)';
+  [['2026-10-06',52000,'TN-49-AB-1201'],['2026-10-19',61000,'TN-49-AB-1388'],['2026-11-03',46500,'TN-49-AB-1442']].forEach(([d,kg,ref])=>st.cmr.lots.push({id:'CL'+st.seq++,date:d,agency:ag,season:'Kharif 2026-27',type:'raw',kg,ref}));
+  [['2026-10-21',30000,'ACK-5521'],['2026-11-06',36000,'ACK-5604']].forEach(([d,kg,ref])=>st.cmr.deliveries.push({id:'CD'+st.seq++,date:d,agency:ag,season:'Kharif 2026-27',kg,ref}));
+  return st;
+}
+function mkSale(st,date,customer,item,kg,rate,gst){const amount=Math.round(kg/100*rate);const tax=Math.round(amount*gst/100);return {id:'S'+st.seq++,invoiceNo:st.settings.firm.invPrefix+String(st.invSeq++).padStart(4,'0'),inter:false,date,customer,item,kg,rate,gst,amount,tax,total:amount+tax}}
+function calcPurchase(S,{gross,bags,moist,rate,tare,fm}){
+  tare=tare==null?S.tarePerBag:tare;fm=fm||0;
+  const tareKg=bags*tare,afterTare=Math.max(0,gross-tareKg);
+  const excess=Math.max(0,moist-S.stdMoisture);
+  const moistKg=afterTare*excess*S.moistureFactor/100;
+  const fmKg=(afterTare-moistKg)*fm/100;
+  const net=Math.round(afterTare-moistKg-fmKg);
+  const amount=Math.round(net/100*rate);
+  const hamali=Math.round(bags*S.hamaliPerBag);
+  return {tareKg,afterTare,moistKg,fmKg,net,amount,hamali,total:amount+hamali,effRate:gross?(amount+hamali)/(gross/100):0};
+}
+
+/* ---------- state ---------- */
+let embedded=null;try{embedded=JSON.parse(document.getElementById('state').textContent)}catch(e){}
+function emptyState(){const s=defaultSettings();s.opening={};s.location='';return {v:2,savedAt:null,settings:s,purchases:[],batches:[],sales:[],adjustments:[],payments:[],parties:[],cmr:{lots:[],deliveries:[]},seq:1,invSeq:1,billSeq:1}}
+let state=BUILD==='pwa'?emptyState():(embedded||seed());
+let dirty=false;const LS='ricemill-draft-v1';
+if(BUILD!=='pwa')try{const dr=JSON.parse(localStorage.getItem(LS)||'null');if(dr&&dr.basedOn===(embedded?embedded.savedAt:null)&&dr.state){state=dr.state;dirty=true}}catch(e){}
+migrate(state);
+function migrate(st){
+  const d=defaultSettings();
+  for(const k in d)if(st.settings[k]===undefined)st.settings[k]=d[k];
+  ['firm','hsn','cmr'].forEach(k=>{for(const j in d[k])if(st.settings[k][j]===undefined)st.settings[k][j]=d[k][j]});
+  if(!st.settings.installedOn)st.settings.installedOn=BUILD==='pwa'?today():'2026-11-10';
+  st.payments=st.payments||[];st.imports=st.imports||[];st.parties=st.parties||[];st.cmr=st.cmr||{lots:[],deliveries:[]};
+  st.invSeq=st.invSeq||1;st.billSeq=st.billSeq||1;
+  st.sales.forEach(x=>{if(!x.invoiceNo)x.invoiceNo=st.settings.firm.invPrefix+String(st.invSeq++).padStart(4,'0');if(x.inter===undefined)x.inter=false});
+  st.purchases.forEach(x=>{if(!x.billNo)x.billNo=st.settings.firm.billPrefix+String(st.billSeq++).padStart(4,'0')});
+  syncParties(st);
+}
+function syncParties(st){
+  const have=new Set(st.parties.map(p=>p.name));const fs=st.settings.firm.stateCode;
+  st.purchases.forEach(p=>{if(!have.has(p.supplier)){have.add(p.supplier);st.parties.push({name:p.supplier,kind:'supplier',gstin:'',stateCode:fs,phone:'',address:''})}});
+  st.sales.forEach(x=>{if(!have.has(x.customer)){have.add(x.customer);st.parties.push({name:x.customer,kind:'customer',gstin:'',stateCode:fs,phone:'',address:''})}});
+}
+let artifactApi=null,downloadsApi=null,capsChecked=false;
+function changed(msg){dirty=true;if(BUILD==='pwa'){schedulePersist();scheduleSync()}else{try{localStorage.setItem(LS,JSON.stringify({basedOn:embedded?embedded.savedAt:null,state}))}catch(e){}}renderSave();if(msg)toast(msg)}
+const S=()=>state.settings;
+let capTries=0;
+function initCaps(){
+  if(window.claude&&claude.use){
+    claude.use('artifact').then(a=>{artifactApi=a;capsChecked=true;renderSave();if(view==='settings')render()}).catch(()=>{capsChecked=true;renderSave()});
+    claude.use('downloads').then(d=>{downloadsApi=d}).catch(()=>{});
+  }else if(capTries++<20)setTimeout(initCaps,250);else{capsChecked=true;renderSave()}
+}
+if(BUILD==='pwa')capsChecked=true;else setTimeout(initCaps,0);
+function buildDoc(st){
+  const css=document.getElementById('app-css').textContent,js=document.getElementById('app-js').textContent;
+  const json=JSON.stringify(st).replace(/</g,'\\u003c');
+  return '<!DOCTYPE html>\n<html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1"><title>'+TITLE+'</title>\n<style id="app-css">'+css+'</style>\n<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.min.js"><\/script>\n</head><body><div id="app"></div>\n<script id="state" type="application/json">'+json+'<\/script>\n<script id="app-js">'+js+'<\/script>\n</body></html>';
+}
+async function save(){
+  if(BUILD==='pwa'){syncNow(true);return}
+  if(!artifactApi){toast('Changes are kept in this browser only');return}
+  if(!navigator.onLine){toast('You are offline — changes are safe on this device. Press Save when back online.');return}
+  touchLastSeen();const st=JSON.parse(JSON.stringify(state));st.savedAt=new Date().toISOString();
+  const b=$('#saveBtn');b.disabled=true;b.textContent='Saving…';
+  try{await artifactApi.publish(buildDoc(st));try{localStorage.removeItem(LS)}catch(e){}}
+  catch(e){b.disabled=false;b.textContent='Save';const c=e&&(e.code||e.message)||'';toast(/not_granted|not_writer/.test(c)?'You have view-only access':(/conflict/.test(c)?'Someone else saved first — reloading':'Save failed — changes still kept in this browser'))}
+}
+
+/* ---------- calculations ---------- */
+function stockMap(st,upto){
+  const s=st.settings,m={};itemKeys(s).forEach(k=>m[k]=s.opening[k]||0);
+  const ok=d=>!upto||d<=upto;
+  st.purchases.forEach(p=>{if(ok(p.date))m['paddy:'+p.variety]=(m['paddy:'+p.variety]||0)+p.netKg});
+  st.batches.forEach(b=>{if(!ok(b.date))return;m['paddy:'+b.variety]-=b.paddyKg;m['rice:'+b.variety]=(m['rice:'+b.variety]||0)+b.headKg;m.broken+=b.brokenKg;m.bran+=b.branKg;m.husk+=b.huskKg});
+  st.sales.forEach(x=>{if(ok(x.date))m[x.item]=(m[x.item]||0)-x.kg});
+  st.adjustments.forEach(a=>{if(ok(a.date))m[a.item]=(m[a.item]||0)+a.kg});
+  return m;
+}
+function avgPaddyRate(v){const ps=state.purchases.filter(p=>p.variety===v);const n=sum(ps,p=>p.netKg);return n?sum(ps,p=>p.amount)/(n/100):S().prices.paddy[v]}
+function unitRate(k){const P=S().prices;if(k.startsWith('paddy:'))return avgPaddyRate(k.slice(6));if(k.startsWith('rice:'))return P.rice[k.slice(5)]||0;return P[k]||0}
+function reorderOf(k){const R=S().reorder;return k.startsWith('paddy:')?R.paddy:k.startsWith('rice:')?R.rice:(R[k]||0)}
+function batchCalc(b){
+  const P=S().prices,s=S();const pq=b.paddyKg/100;
+  const paddyCost=pq*avgPaddyRate(b.variety),proc=pq*s.processingCost;
+  const credit=b.brokenKg/100*P.broken+b.branKg/100*P.bran+b.huskKg/100*P.husk;
+  const head=b.headKg/b.paddyKg*100,broken=b.brokenKg/b.paddyKg*100,bran=b.branKg/b.paddyKg*100,husk=b.huskKg/b.paddyKg*100;
+  const loss=Math.max(0,100-head-broken-bran-husk);
+  const riceCost=b.headKg?(paddyCost+proc-credit)/(b.headKg/100):0;
+  const ricePrice=P.rice[b.variety]||0;
+  const outValue=b.headKg/100*ricePrice+credit;
+  return {head,broken,bran,husk,loss,total:head+broken,paddyCost,proc,credit,riceCost,ricePrice,margin:ricePrice-riceCost,outValue,profit:outValue-paddyCost-proc};
+}
+function inPeriod(d,per){return d>=per.from&&d<=per.to}
+
+/* ---------- routing / shell ---------- */
+const VIEWS=[['dashboard','Dashboard'],['inventory','Inventory'],['purchases','Paddy purchase'],['milling','Milling'],['sales','Sales'],['accounts','Accounts'],['gst','GST & Tally'],['cmr','Govt. milling (CMR)'],['import','Import Excel'],['calculators','Calculators'],['reports','Reports'],['settings','Settings']];
+let view='dashboard',charts=[];
+function shell(){
+  document.getElementById('app').innerHTML=`<div class="top"><div class="bar"><div class="brand"><svg width="30" height="30" viewBox="0 0 32 32" aria-hidden="true"><rect width="32" height="32" rx="8" fill="var(--accent)"/><g fill="var(--accent-ink)"><ellipse cx="16" cy="9" rx="2.6" ry="4.6"/><ellipse cx="10.5" cy="15" rx="2.4" ry="4.3" transform="rotate(-35 10.5 15)"/><ellipse cx="21.5" cy="15" rx="2.4" ry="4.3" transform="rotate(35 21.5 15)"/><rect x="15.2" y="13" width="1.6" height="13" rx=".8"/></g></svg><div><span id="millName"></span><small id="millLoc"></small></div></div><div class="spacer"></div><div class="save noprint"><span id="savePill" class="pill"></span><button id="saveBtn" class="btn primary sm">Save</button></div></div><nav class="tabs noprint" id="tabs"></nav></div><main id="main"></main><div id="toast" class="toast" role="status"></div><div id="modal"></div>`;
+  $('#tabs').innerHTML=VIEWS.map(([k,l])=>`<a href="#${k}" data-v="${k}">${l}</a>`).join('');
+  $('#saveBtn').onclick=save;
+}
+function renderSave(){
+  const p=$('#savePill'),b=$('#saveBtn');if(!p)return;
+  $('#millName').textContent=S().millName;$('#millLoc').textContent=S().location;
+  if(BUILD==='pwa'){renderSyncPill(p,b);return}
+  if(!navigator.onLine){p.className='pill dirty';p.textContent=dirty?'Offline · changes kept on this device':'Offline';b.style.display=artifactApi?'':'none';b.disabled=true;b.textContent='Save';return}
+  if(dirty){p.className='pill dirty';p.textContent=artifactApi?'Unsaved changes':(capsChecked?'Saved in this browser':'Unsaved changes')}
+  else{p.className='pill ok';p.textContent=state.savedAt?'Saved '+new Date(state.savedAt).toLocaleString('en-IN',{day:'numeric',month:'short',hour:'2-digit',minute:'2-digit'}):'Demo data loaded'}
+  b.style.display=artifactApi?'':'none';b.disabled=!dirty;b.textContent='Save';
+}
+function route(){
+  const h=(location.hash||'').slice(1);view=VIEWS.some(v=>v[0]===h)?h:'dashboard';
+  document.querySelectorAll('#tabs a').forEach(a=>a.classList.toggle('on',a.dataset.v===view));
+  render();
+}
+let focusTarget=null;
+function goAttr(spec){return spec?'data-go="'+esc(spec)+'" tabindex="0" role="link"':''}
+function go(spec){const [v,id,x]=String(spec).split('|');
+  if(v==='inventory'&&id&&id!=='invTable'){invSel=id;focusTarget={v,id:'ledgerCard'}}else focusTarget=id?{v,id}:null;
+  if(v==='accounts'&&x)accTab=x;if(v==='reports')rPeriod=rPeriod||'90';
+  if((location.hash||'#dashboard').slice(1)===v)route();else location.hash=v}
+function chartClick(fn,c){c=c||charts[charts.length-1];if(!c)return;c.config.options.onClick=(e,els)=>{if(els&&els.length)fn(els[0].index)};c.config.options.onHover=(e,els)=>{if(e.native)e.native.target.style.cursor=els&&els.length?'pointer':'default'};c.update('none')}
+function applyFocus(){if(!focusTarget||focusTarget.v!==view)return;const id=focusTarget.id;focusTarget=null;
+  const el=document.querySelector('[data-row="'+CSS.escape(id)+'"]')||document.getElementById(id);if(!el)return;
+  setTimeout(()=>{el.scrollIntoView({behavior:'smooth',block:'center'});el.classList.remove('flash');void el.offsetWidth;el.classList.add('flash')},60)}
+document.addEventListener('click',e=>{const g=e.target.closest&&e.target.closest('[data-go]');if(!g||e.target.closest('button,a,input,select'))return;go(g.dataset.go)});
+document.addEventListener('keydown',e=>{if(e.key!=='Enter'&&e.key!==' ')return;const g=e.target.closest&&e.target.closest('[data-go]');if(g&&g===e.target){e.preventDefault();go(g.dataset.go)}});
+function render(){
+  charts.forEach(c=>c.destroy());charts=[];
+  const L=licenceStatus();document.body.classList.toggle('ro',L.expired);
+  const m=$('#main');m.innerHTML=licenceBanner()+({dashboard:vDashboard,inventory:vInventory,purchases:vPurchases,milling:vMilling,sales:vSales,accounts:vAccounts,gst:vGst,cmr:vCmr,import:vImport,calculators:vCalculators,reports:vReports,settings:vSettings})[view]();
+  const after=AFTER[view];if(after)after();renderSave();applyFocus();
+}
+const AFTER={};
+
+/* ---------- charts ---------- */
+function cv(n){return getComputedStyle(document.documentElement).getPropertyValue(n).trim()}
+function baseOpts(extra){
+  const grid=cv('--grid'),t2=cv('--text-2');
+  return Object.assign({responsive:true,maintainAspectRatio:false,animation:{duration:250},interaction:{mode:'index',intersect:false},
+    plugins:{legend:{display:false},tooltip:{backgroundColor:cv('--surface'),titleColor:cv('--text'),bodyColor:cv('--text-2'),borderColor:cv('--border'),borderWidth:1,padding:10,boxPadding:4,usePointStyle:true}},
+    scales:{x:{grid:{display:false},ticks:{color:t2,font:{size:11}},border:{color:grid}},y:{grid:{color:grid},border:{display:false},ticks:{color:t2,font:{size:11}}}}},extra||{});
+}
+function chart(id,cfg){if(!window.Chart)return;const el=document.getElementById(id);if(!el)return;charts.push(new Chart(el,cfg))}
+
+/* ---------- views ---------- */
+function statusTag(k,kg){const r=reorderOf(k);if(kg<0)return '<span class="tag crit">✕ Negative</span>';if(r&&kg<r*0.5)return '<span class="tag crit">! Critical</span>';if(r&&kg<r)return '<span class="tag warn">▲ Reorder</span>';return '<span class="tag good">✓ OK</span>'}
+function alerts(){
+  const m=stockMap(state),out=[];
+  itemKeys(S()).forEach(k=>{const r=reorderOf(k),kg=m[k];if(r&&kg<r)out.push({go:'inventory|'+k,lvl:kg<r*0.5?'crit':'warn',t:`${itemName(k)} is at ${qtl(kg)} qtl`,d:`Reorder level ${qtl(r)} qtl · shortfall ${qtl(r-kg)} qtl${k.startsWith('rice:')?' · mill ~'+qtl((r-kg)/(S().yieldByVariety[k.slice(5)]/100))+' qtl paddy':''}`})});
+  const recent=state.batches.slice(-10).map(b=>[b,batchCalc(b)]).filter(([b,c])=>c.head<S().target.head-1.5);
+  recent.forEach(([b,c])=>out.push({go:'milling|'+b.id,lvl:'warn',t:`Low out-turn in batch ${b.id} (${b.variety})`,d:`Head rice ${pct(c.head)} vs target ${pct(S().target.head,0)} on ${fmtDate(b.date)}`}));
+  const wetty=state.purchases.slice(-15).filter(p=>p.moisture>=18);
+  if(wetty.length)out.push({go:'reports|repSuppliers',lvl:'warn',t:`${wetty.length} recent paddy lots arrived at ≥18% moisture`,d:'Dry before milling to protect head-rice yield · '+[...new Set(wetty.map(p=>p.supplier))].join(', ')});
+  const ac=accTotals();if(ac.overdue>0)out.push({go:'accounts|'+ac.overdueParties[0]+'|customer',lvl:ac.overdue>500000?'crit':'warn',t:`${inrC(ac.overdue)} overdue from ${ac.overdueParties.length} customer(s)`,d:ac.overdueParties.slice(0,3).join(', ')+' · see Accounts'});
+  const cm=cmrSummary().filter(x=>x.balance>0);cm.forEach(x=>out.push({go:'cmr|cmrProgress',lvl:'warn',t:`CMR pending: ${qtl(x.balance)} qtl rice to deliver`,d:`${x.agency} · ${x.season} · ${pct(x.donePct,0)} delivered`}));
+  return out;
+}
+function monthsAll(){const s=new Set();[...state.purchases,...state.sales,...state.batches].forEach(x=>s.add(ym(x.date)));return [...s].sort()}
+function lastDate(){let d='';[...state.purchases,...state.sales,...state.batches].forEach(x=>{if(x.date>d)d=x.date});return d||today()}
+
+function welcomeCard(){if(BUILD!=='pwa'||state.purchases.length||state.sales.length||state.batches.length||state.payments.length)return '';
+  return `<div class="card" style="margin-bottom:16px;border-color:var(--accent)"><h2>Welcome to Rice Mill Manager</h2><p style="margin:-4px 0 12px">No entries yet on this device. Try it with sample data first, or start entering your own mill's data.</p>
+  <div class="row"><button class="btn primary" id="wDemo">Explore with demo data</button><a class="btn" href="#settings">Start with my own data</a><a class="btn" href="#import">Import from Excel</a></div>
+  <p class="muted" style="font-size:12.5px;margin:10px 0 0">Demo data can be cleared later in Settings → Data → Start fresh.</p></div>`}
+function vDashboard(){
+  const m=stockMap(state),s=S();
+  const paddy=sum(s.varieties,v=>m['paddy:'+v]),rice=sum(s.varieties,v=>m['rice:'+v]);
+  const value=sum(itemKeys(s),k=>Math.max(0,m[k])/100*unitRate(k));
+  const cm=ym(lastDate());const ms=state.sales.filter(x=>ym(x.date)===cm),mb=state.batches.filter(b=>ym(b.date)===cm);
+  const pm=monthsAll();const prevM=pm[pm.indexOf(cm)-1];const dom=lastDate().slice(8,10);const ps=prevM?state.sales.filter(x=>ym(x.date)===prevM&&x.date.slice(8,10)<=dom):[];
+  const yieldM=sum(mb,b=>b.headKg)/Math.max(1,sum(mb,b=>b.paddyKg))*100;
+  const al=alerts();const acc=accTotals();
+  const recent=[...state.purchases.map(p=>({d:p.date,t:'Purchase',x:`${p.supplier} · ${p.variety}`,q:p.netKg,a:p.amount,id:p.id,go:'purchases|'+p.id})),...state.batches.map(b=>({d:b.date,t:'Milling',x:`${b.variety} · out-turn ${pct(b.headKg/b.paddyKg*100)}`,q:b.paddyKg,a:null,id:b.id,go:'milling|'+b.id})),...state.sales.map(x=>({d:x.date,t:'Sale',x:`${x.customer} · ${itemName(x.item)}`,q:x.kg,a:x.total,id:x.id,go:'sales|'+x.id}))].sort((a,b)=>b.d.localeCompare(a.d)||b.id.localeCompare(a.id,undefined,{numeric:true})).slice(0,8);
+  const salesDelta=ps.length?(sum(ms,x=>x.amount)/sum(ps,x=>x.amount)-1)*100:null;
+  return welcomeCard()+`<h1>Good day — here's the mill at a glance</h1><p class="sub">Stock is live from every purchase, milling batch and sale. Month figures are for ${monthName(cm)}.</p>
+  <div class="kpis">
+    <div class="card kpi link" ${goAttr('inventory|invTable')}><div class="l">Paddy in godown</div><div class="v">${qtl(paddy)} qtl</div><div class="d">≈ ${num(paddy/s.paddyBagKg)} bags of ${s.paddyBagKg} kg</div></div>
+    <div class="card kpi link" ${goAttr('inventory|invTable')}><div class="l">Rice ready to sell</div><div class="v">${qtl(rice)} qtl</div><div class="d">≈ ${num(rice/s.riceBagKg)} bags of ${s.riceBagKg} kg</div></div>
+    <div class="card kpi link" ${goAttr('inventory|invTable')}><div class="l">Total stock value</div><div class="v">${inrC(value)}</div><div class="d">Paddy at avg cost, rest at price list</div></div>
+    <div class="card kpi link" ${goAttr('sales|salesReg')}><div class="l">Sales · ${monthName(cm)}</div><div class="v">${inrC(sum(ms,x=>x.amount))}</div><div class="d">${salesDelta==null?ms.length+' invoices':(salesDelta>=0?'▲ ':'▼ ')+Math.abs(salesDelta).toFixed(0)+'% vs same days of '+monthName(prevM)}</div></div>
+    <div class="card kpi link" ${goAttr('milling|millReg')}><div class="l">Head-rice out-turn · ${monthName(cm)}</div><div class="v">${mb.length?pct(yieldM):'—'}</div><div class="d">Target ${pct(s.target.head,0)} · ${mb.length} batches</div></div>
+    <div class="card kpi link" ${goAttr('accounts|accBalances|customer')}><div class="l">To collect from customers</div><div class="v">${inrC(acc.recv)}</div><div class="d">${inrC(acc.overdue)} overdue &gt; ${s.creditDays} days</div></div>
+    <div class="card kpi link" ${goAttr('accounts|accBalances|supplier')}><div class="l">To pay farmers / suppliers</div><div class="v">${inrC(acc.pay)}</div><div class="d">${acc.adv?inrC(acc.adv)+' in advances given':'No open advances'}</div></div>
+    <div class="card kpi link" ${goAttr('dashboard|alertsCard')}><div class="l">Needs attention</div><div class="v">${al.length}</div><div class="d">${al.filter(a=>a.lvl==='crit').length} critical alerts</div></div>
+  </div>
+  <div class="grid g2">
+    <div class="card" id="alertsCard"><h2>Alerts</h2>${al.length?al.slice(0,7).map(a=>`<div class="alert link" ${goAttr(a.go)}><span class="ic ${a.lvl}">${a.lvl==='crit'?'!':'▲'}</span><div><div>${esc(a.t)}</div><div class="muted" style="font-size:12.5px">${esc(a.d)}</div></div><span class="go-arrow">›</span></div>`).join(''):'<p class="muted">All stock above reorder levels. No quality issues in recent batches.</p>'}</div>
+    <div class="card"><h2>Quick entry</h2><div class="qa">
+      <a class="btn" href="#purchases"><b>+ Paddy purchase</b><span>Auto moisture & tare deduction</span></a>
+      <a class="btn" href="#milling"><b>+ Milling batch</b><span>Expected output pre-filled</span></a>
+      <a class="btn" href="#sales"><b>+ Sale / invoice</b><span>Bags → kg, GST computed</span></a>
+      <a class="btn" href="#calculators"><b>Calculators</b><span>Out-turn, cost, price, units</span></a>
+      <a class="btn" href="#reports"><b>Management report</b><span>Yield, margin, suppliers</span></a>
+      <a class="btn" href="#inventory"><b>Stock register</b><span>Item ledger & adjustments</span></a>
+      <a class="btn" href="#import"><b>Import from Excel</b><span>Any column layout — auto-matched</span></a>
+      <a class="btn" href="#accounts"><b>Accounts</b><span>Dues, payments, statements</span></a></div></div>
+  </div>
+  <div class="grid g2" style="margin-top:16px">
+    <div class="card"><h2>Stock on hand vs reorder level (qtl)</h2><div class="legend"><span><i style="background:var(--s1)"></i>Stock on hand</span><span><i style="background:var(--border)"></i>Reorder level</span></div><div class="chart tall"><canvas id="cStock"></canvas></div></div>
+    <div class="card"><h2>Head-rice out-turn, last 20 batches</h2><div class="legend"><span><i style="background:var(--s1)"></i>Out-turn %</span><span><i class="dash"></i>Target ${pct(s.target.head,0)}</span></div><div class="chart tall"><canvas id="cYield"></canvas></div></div>
+  </div>
+  <div class="card" style="margin-top:16px"><h2>Recent activity</h2><div class="tw"><table><thead><tr><th>Date</th><th>Type</th><th>Details</th><th class="n">Qty (qtl)</th><th class="n">Amount</th></tr></thead><tbody>${recent.map(r=>`<tr class="click" ${goAttr(r.go)}><td>${fmtDate(r.d)}</td><td><span class="tag neutral">${r.t}</span></td><td>${esc(r.x)}</td><td class="n">${qtl(r.q)}</td><td class="n">${r.a==null?'—':inr(r.a)}</td></tr>`).join('')}</tbody></table></div></div>`;
+}
+AFTER.dashboard=()=>{
+  setTimeout(()=>{const c=window.Chart&&Chart.getChart('cYield');if(c){const bs=state.batches.slice(-20);chartClick(i=>go('milling|'+bs[i].id),c)}},0);
+  const wd=$('#wDemo');if(wd)wd.onclick=()=>{const keep={licence:S().licence,installedOn:S().installedOn,lastSeen:S().lastSeen};state=seed();Object.assign(state.settings,keep);migrate(state);changed('Demo data loaded');render()};
+  const m=stockMap(state),keys=itemKeys(S());
+  chart('cStock',{type:'bar',data:{labels:keys.map(itemName),datasets:[{label:'Stock (qtl)',data:keys.map(k=>+(m[k]/100).toFixed(1)),backgroundColor:cv('--s1'),borderRadius:4,barPercentage:.7,categoryPercentage:.8},{label:'Reorder level',data:keys.map(k=>reorderOf(k)/100||0),backgroundColor:cv('--border'),borderRadius:4,barPercentage:.7,categoryPercentage:.8}]},options:baseOpts({indexAxis:'y',scales:{x:{grid:{color:cv('--grid')},border:{display:false},ticks:{color:cv('--text-2'),font:{size:11}}},y:{grid:{display:false},ticks:{color:cv('--text-2'),font:{size:11}}}}})});
+  const bs=state.batches.slice(-20);
+  chartClick(i=>go('inventory|'+keys[i]));
+  chart('cYield',{type:'line',data:{labels:bs.map(b=>fmtDate(b.date)+' · '+b.variety),datasets:[{label:'Out-turn %',data:bs.map(b=>+(b.headKg/b.paddyKg*100).toFixed(2)),borderColor:cv('--s1'),backgroundColor:cv('--s1'),borderWidth:2,pointRadius:4,pointHoverRadius:6,tension:.25},{label:'Target',data:bs.map(()=>S().target.head),borderColor:cv('--muted'),borderDash:[5,4],borderWidth:1.5,pointRadius:0}]},options:baseOpts({scales:{x:{grid:{display:false},ticks:{color:cv('--text-2'),font:{size:10},callback:function(v){return this.getLabelForValue(v).split(' · ')[0]},maxRotation:0,autoSkip:true,maxTicksLimit:8}},y:{grid:{color:cv('--grid')},border:{display:false},ticks:{color:cv('--text-2'),callback:v=>v+'%'},suggestedMin:60,suggestedMax:70}},plugins:{...baseOpts().plugins,tooltip:{...baseOpts().plugins.tooltip,callbacks:{label:c=>c.dataset.label+': '+c.parsed.y.toFixed(1)+'%'}}}})});
+};
+
+/* inventory */
+let invSel=null;
+function vInventory(){
+  const s=S(),m=stockMap(state),keys=itemKeys(s);
+  let tv=0;
+  const rows=keys.map(k=>{const kg=m[k],bag=k.startsWith('paddy:')?s.paddyBagKg:s.riceBagKg,val=Math.max(0,kg)/100*unitRate(k);tv+=val;
+    return `<tr class="click ${invSel===k?'sel':''}" data-k="${esc(k)}"><td>${esc(itemName(k))}</td><td>${itemCat(k)}</td><td class="n">${num(kg)}</td><td class="n">${qtl(kg)}</td><td class="n">${num(kg/bag)} <span class="muted">× ${bag}kg</span></td><td class="n">${reorderOf(k)?qtl(reorderOf(k)):'—'}</td><td>${statusTag(k,kg)}</td><td class="n">${inr(unitRate(k))}</td><td class="n">${inr(val)}</td></tr>`}).join('');
+  let ledger='';
+  if(invSel){
+    const k=invSel,mv=[];
+    state.purchases.forEach(p=>{if('paddy:'+p.variety===k)mv.push({d:p.date,id:p.id,t:'Purchase',x:p.supplier,i:p.netKg,o:0})});
+    state.batches.forEach(b=>{if('paddy:'+b.variety===k)mv.push({d:b.date,id:b.id,t:'Milled',x:'Batch '+b.id,i:0,o:b.paddyKg});const out={['rice:'+b.variety]:b.headKg,broken:b.brokenKg,bran:b.branKg,husk:b.huskKg}[k];if(out)mv.push({d:b.date,id:b.id,t:'Produced',x:'Batch '+b.id+' · '+b.variety,i:out,o:0})});
+    state.sales.forEach(x=>{if(x.item===k)mv.push({d:x.date,id:x.id,t:'Sale',x:x.customer,i:0,o:x.kg})});
+    state.adjustments.forEach(a=>{if(a.item===k)mv.push({d:a.date,id:a.id,t:'Adjustment',x:a.reason,i:Math.max(0,a.kg),o:Math.max(0,-a.kg)})});
+    mv.sort((a,b)=>a.d.localeCompare(b.d)||a.id.localeCompare(b.id,undefined,{numeric:true}));
+    let bal=s.opening[k]||0;const lines=mv.map(r=>{bal+=r.i-r.o;return `<tr><td>${fmtDate(r.d)}</td><td>${r.t}</td><td>${esc(r.x)}</td><td class="n">${r.i?num(r.i):''}</td><td class="n">${r.o?num(r.o):''}</td><td class="n"><b>${num(bal)}</b></td></tr>`});
+    ledger=`<div class="card" id="ledgerCard" style="margin-top:16px"><div class="sec-h"><h2>Stock ledger · ${esc(itemName(k))}</h2><button class="btn sm" id="ledgerCsv">Export CSV</button></div><div class="tw"><table><thead><tr><th>Date</th><th>Type</th><th>Party / reference</th><th class="n">In (kg)</th><th class="n">Out (kg)</th><th class="n">Balance (kg)</th></tr></thead><tbody><tr><td>—</td><td>Opening</td><td class="muted">Opening stock</td><td class="n">${num(s.opening[k]||0)}</td><td></td><td class="n"><b>${num(s.opening[k]||0)}</b></td></tr>${lines.reverse().join('')}</tbody></table></div><p class="muted" style="font-size:12px;margin:8px 0 0">Newest first. Balance is the running stock after each entry.</p></div>`;
+  }
+  return `<div class="sec-h"><div><h1>Inventory</h1><p class="sub" style="margin:0">Stock updates automatically — no manual totalling. Click any item for its ledger.</p></div><button class="btn" id="invCsv">Export stock CSV</button></div>
+  <div class="tw" id="invTable" style="max-height:none;background:var(--surface)"><table><thead><tr><th>Item</th><th>Category</th><th class="n">Stock (kg)</th><th class="n">Quintals</th><th class="n">Bags</th><th class="n">Reorder (qtl)</th><th>Status</th><th class="n">Rate ₹/qtl</th><th class="n">Value</th></tr></thead><tbody>${rows}</tbody><tfoot><tr><td colspan="8">Total stock value</td><td class="n">${inr(tv)}</td></tr></tfoot></table></div>
+  ${ledger}
+  <div class="card" style="margin-top:16px"><h2>Stock adjustment</h2><p class="muted" style="margin:-6px 0 12px;font-size:13px">For physical count differences, shortage, damage or opening corrections. Use a minus sign to reduce stock.</p>
+  <div class="form"><div class="f"><label>Date</label><input type="date" id="adDate" value="${today()}"></div><div class="f"><label>Item</label><select id="adItem">${keys.map(k=>`<option value="${esc(k)}" ${k===invSel?'selected':''}>${esc(itemName(k))}</option>`).join('')}</select></div><div class="f"><label>Quantity (kg, ±)</label><input type="number" id="adKg" placeholder="-250"></div><div class="f" style="grid-column:span 2"><label>Reason</label><input id="adReason" placeholder="Physical count difference"></div><div class="f" style="align-self:end"><button class="btn primary" id="adSave">Record adjustment</button></div></div>
+  ${state.adjustments.length?`<div class="tw" style="margin-top:12px"><table><thead><tr><th>Date</th><th>Item</th><th class="n">Kg</th><th>Reason</th><th></th></tr></thead><tbody>${state.adjustments.slice().reverse().map(a=>`<tr><td>${fmtDate(a.date)}</td><td>${esc(itemName(a.item))}</td><td class="n">${num(a.kg)}</td><td>${esc(a.reason)}</td><td class="n"><button class="btn sm danger" data-del="adjustments:${a.id}">Delete</button></td></tr>`).join('')}</tbody></table></div>`:''}</div>`;
+}
+AFTER.inventory=()=>{
+  document.querySelectorAll('tr[data-k]').forEach(tr=>tr.onclick=()=>{invSel=invSel===tr.dataset.k?null:tr.dataset.k;render();if(invSel)setTimeout(()=>{const l=$('#ledgerCsv');l&&l.scrollIntoView({behavior:'smooth',block:'center'})},50)});
+  $('#adSave').onclick=()=>{const kg=F('adKg');if(!kg){toast('Enter a quantity');return}state.adjustments.push({id:nextId('A',state.adjustments),date:V('adDate')||today(),item:V('adItem'),kg,reason:V('adReason')||'Adjustment'});changed('Adjustment recorded');render()};
+  $('#invCsv').onclick=()=>{const m=stockMap(state);exportCSV('stock-'+today()+'.csv',[['Item','Category','Stock kg','Quintals','Reorder kg','Rate per qtl','Value'],...itemKeys(S()).map(k=>[itemName(k),itemCat(k),Math.round(m[k]),(m[k]/100).toFixed(2),reorderOf(k),Math.round(unitRate(k)),Math.round(Math.max(0,m[k])/100*unitRate(k))])])};
+  const l=$('#ledgerCsv');if(l)l.onclick=()=>{const rows=[...document.querySelectorAll('.card .tw table')][0];exportTable(rows,'ledger-'+invSel.replace(/[^a-z0-9]+/gi,'-')+'.csv')};
+  bindDeletes();
+};
+
+/* purchases */
+function vPurchases(){
+  const s=S(),sups=[...new Set(state.purchases.map(p=>p.supplier))].sort();
+  const list=state.purchases.slice().reverse().slice(0,150);
+  return `<h1>Paddy purchase</h1><p class="sub">Enter the weighbridge reading and moisture. Tare, moisture deduction, net weight and payable amount are calculated for you.</p>
+  <div class="card"><h2>New purchase entry</h2><datalist id="supList">${sups.map(x=>`<option value="${esc(x)}">`).join('')}</datalist>
+  <div class="form" id="pForm">
+    <div class="f"><label>Date</label><input type="date" id="pDate" value="${today()}"></div>
+    <div class="f" style="grid-column:span 2"><label>Supplier / farmer</label><input id="pSup" list="supList" placeholder="Name"></div>
+    <div class="f"><label>Variety</label><select id="pVar">${s.varieties.map(v=>`<option>${esc(v)}</option>`).join('')}</select></div>
+    <div class="f"><label>No. of bags</label><input type="number" id="pBags" placeholder="200"></div>
+    <div class="f"><label>Gross weight (kg)</label><input type="number" id="pGross" placeholder="15,200"><div class="hint">Loaded − empty vehicle</div></div>
+    <div class="f"><label>Tare per bag (kg)</label><input type="number" step="0.1" id="pTare" value="${s.tarePerBag}"></div>
+    <div class="f"><label>Moisture %</label><input type="number" step="0.1" id="pMoist" placeholder="16.5"><div class="hint">Standard ${s.stdMoisture}%</div></div>
+    <div class="f"><label>Foreign matter %</label><input type="number" step="0.1" id="pFm" value="0"></div>
+    <div class="f"><label>Rate (₹ / qtl net)</label><input type="number" id="pRate" value="${s.prices.paddy[s.varieties[0]]}"></div>
+  </div>
+  <div class="calc" id="pOut"></div>
+  <div class="row" style="margin-top:12px"><button class="btn primary" id="pSave">Save purchase</button><button class="btn" id="pClear">Clear</button><span class="muted" style="font-size:12.5px">Adds net weight to paddy stock instantly.</span></div></div>
+  <div class="card" id="purReg" style="margin-top:16px"><div class="sec-h"><h2>Purchase register</h2><button class="btn sm" id="pCsv">Export CSV</button></div><div class="tw"><table id="pTable"><thead><tr><th>Date</th><th>Bill no</th><th>Supplier</th><th>Variety</th><th class="n">Bags</th><th class="n">Gross kg</th><th class="n">Moist %</th><th class="n">Net kg</th><th class="n">Rate</th><th class="n">Amount</th><th></th></tr></thead><tbody>${list.map(p=>`<tr data-row="${p.id}"><td>${fmtDate(p.date)}</td><td class="muted">${esc(p.billNo)}</td><td>${esc(p.supplier)}</td><td>${esc(p.variety)}</td><td class="n">${num(p.bags)}</td><td class="n">${num(p.grossKg)}</td><td class="n">${p.moisture>=18?'<span class="tag warn">'+p.moisture+'</span>':p.moisture}</td><td class="n">${num(p.netKg)}</td><td class="n">${num(p.rate)}</td><td class="n">${inr(p.amount)}</td><td class="n"><button class="btn sm" data-slip="${p.id}">Slip</button> <button class="btn sm danger" data-del="purchases:${p.id}">✕</button></td></tr>`).join('')}</tbody></table></div><p class="muted" style="font-size:12px;margin:8px 0 0">Showing latest ${list.length} of ${state.purchases.length} entries.</p></div>`;
+}
+function purchaseCalcView(){
+  const s=S(),c=calcPurchase(s,{gross:F('pGross'),bags:F('pBags'),moist:F('pMoist'),rate:F('pRate'),tare:F('pTare'),fm:F('pFm')});
+  $('#pOut').innerHTML=[['Tare deduction',num(c.tareKg)+' kg'],['Moisture deduction',num(c.moistKg)+' kg'],['Foreign matter',num(c.fmKg)+' kg'],['Net weight',num(c.net)+' kg',1],['Net quintals',qtl(c.net)+' qtl'],['Amount payable',inr(c.amount),1],['Hamali / unloading',inr(c.hamali)],['Total cost to mill',inr(c.total)],['Effective ₹/qtl (gross)',inr(c.effRate)]].map(([l,v,b])=>`<div><div class="l">${l}</div><div class="v ${b?'big':''}">${v}</div></div>`).join('');
+  return c;
+}
+AFTER.purchases=()=>{
+  const pf=$('#pForm');pf.addEventListener('input',purchaseCalcView);
+  $('#pVar').onchange=()=>{$('#pRate').value=S().prices.paddy[V('pVar')];purchaseCalcView()};
+  try{const pre=JSON.parse(sessionStorage.getItem('ricemill-prefill')||'null');if(pre){Object.entries(pre).forEach(([k,v])=>{const e=document.getElementById(k);if(e)e.value=v});sessionStorage.removeItem('ricemill-prefill')}}catch(e){}
+  purchaseCalcView();
+  $('#pSave').onclick=()=>{
+    const c=purchaseCalcView();if(!V('pSup').trim()||!c.net){toast('Enter supplier, bags and gross weight');return}
+    const np={id:nextId('P',state.purchases),billNo:nextNo(S().firm.billPrefix,state.purchases,'billNo'),date:V('pDate')||today(),supplier:V('pSup').trim(),variety:V('pVar'),bags:F('pBags'),grossKg:F('pGross'),tarePerBag:F('pTare'),moisture:F('pMoist'),fm:F('pFm'),rate:F('pRate'),netKg:c.net,amount:c.amount,hamali:c.hamali};state.purchases.push(np);
+    state.purchases.sort((a,b)=>a.date.localeCompare(b.date));syncParties(state);changed(`Saved: ${qtl(c.net)} qtl ${V('pVar')} added to stock`);render();showDoc('Weighment slip '+np.billNo,slipDoc(np),'slip-'+np.billNo.replace(/\W+/g,'-')+'.html');
+  };
+  $('#pClear').onclick=()=>{['pSup','pBags','pGross','pMoist'].forEach(i=>$('#'+i).value='');purchaseCalcView()};
+  document.querySelectorAll('[data-slip]').forEach(b=>b.onclick=()=>{const p=state.purchases.find(x=>x.id===b.dataset.slip);showDoc('Weighment slip '+p.billNo,slipDoc(p),'slip-'+p.billNo.replace(/\W+/g,'-')+'.html')});
+  $('#pCsv').onclick=()=>exportCSV('purchases.csv',[['Date','Bill no','Supplier','Variety','Bags','Gross kg','Moisture %','Net kg','Rate per qtl','Amount','Hamali'],...state.purchases.map(p=>[p.date,p.billNo,p.supplier,p.variety,p.bags,p.grossKg,p.moisture,p.netKg,p.rate,p.amount,p.hamali])]);
+  bindDeletes();
+};
+
+/* milling */
+let millTouched=false;
+function vMilling(){
+  const s=S(),m=stockMap(state);const list=state.batches.slice().reverse().slice(0,150);
+  return `<h1>Milling batches</h1><p class="sub">Enter the paddy going into the mill — expected outputs are pre-filled from your yield standards. Overwrite with actual weights after milling.</p>
+  <div class="card"><h2>New milling batch</h2><div class="form" id="mForm">
+    <div class="f"><label>Date</label><input type="date" id="mDate" value="${today()}"></div>
+    <div class="f"><label>Variety</label><select id="mVar">${s.varieties.map(v=>`<option>${esc(v)}</option>`).join('')}</select><div class="hint" id="mAvail"></div></div>
+    <div class="f"><label>Paddy input (kg)</label><input type="number" id="mPaddy" placeholder="12,000"></div>
+    <div class="f"><label>Head rice (kg)</label><input type="number" id="mHead" class="mo"></div>
+    <div class="f"><label>Broken rice (kg)</label><input type="number" id="mBroken" class="mo"></div>
+    <div class="f"><label>Bran (kg)</label><input type="number" id="mBran" class="mo"></div>
+    <div class="f"><label>Husk (kg)</label><input type="number" id="mHusk" class="mo"></div>
+  </div><div class="calc" id="mOut"></div>
+  <div class="row" style="margin-top:12px"><button class="btn primary" id="mSave">Save batch</button><button class="btn" id="mFill">Reset to expected</button><span class="muted" style="font-size:12.5px">Moves paddy out of stock and adds rice & by-products in.</span></div></div>
+  <div class="card" id="millReg" style="margin-top:16px"><div class="sec-h"><h2>Batch register</h2><button class="btn sm" id="mCsv">Export CSV</button></div><div class="tw"><table><thead><tr><th>Date</th><th>Batch</th><th>Variety</th><th class="n">Paddy kg</th><th class="n">Head rice kg</th><th class="n">Out-turn</th><th class="n">Broken</th><th class="n">Bran</th><th class="n">Husk</th><th class="n">Loss</th><th class="n">Rice cost ₹/qtl</th><th class="n">Batch margin</th><th></th></tr></thead><tbody>${list.map(b=>{const c=batchCalc(b);const lo=c.head<s.target.head-1.5;return `<tr data-row="${b.id}"><td>${fmtDate(b.date)}</td><td class="muted">${b.id}</td><td>${esc(b.variety)}</td><td class="n">${num(b.paddyKg)}</td><td class="n">${num(b.headKg)}</td><td class="n">${lo?'<span class="tag warn">▼ '+pct(c.head)+'</span>':pct(c.head)}</td><td class="n">${pct(c.broken)}</td><td class="n">${pct(c.bran)}</td><td class="n">${pct(c.husk)}</td><td class="n">${pct(c.loss)}</td><td class="n">${inr(c.riceCost)}</td><td class="n">${inr(c.profit)}</td><td class="n"><button class="btn sm danger" data-del="batches:${b.id}">✕</button></td></tr>`}).join('')}</tbody></table></div></div>`;
+}
+function millFill(force){
+  const s=S(),v=V('mVar'),kg=F('mPaddy'),hy=s.yieldByVariety[v]||s.target.head;
+  if(force||!millTouched){$('#mHead').value=kg?Math.round(kg*hy/100):'';$('#mBroken').value=kg?Math.round(kg*s.target.broken/100):'';$('#mBran').value=kg?Math.round(kg*s.target.bran/100):'';$('#mHusk').value=kg?Math.round(kg*s.target.husk/100):'';if(force)millTouched=false}
+}
+function millCalcView(){
+  const s=S(),m=stockMap(state),v=V('mVar');$('#mAvail').textContent='Available: '+num(m['paddy:'+v])+' kg';
+  const b={variety:v,paddyKg:F('mPaddy'),headKg:F('mHead'),brokenKg:F('mBroken'),branKg:F('mBran'),huskKg:F('mHusk')};
+  if(!b.paddyKg){$('#mOut').innerHTML='<div class="muted" style="grid-column:1/-1">Enter paddy input to see out-turn, cost and margin.</div>';return null}
+  const c=batchCalc(b);const over=b.paddyKg>m['paddy:'+v];
+  $('#mOut').innerHTML=[['Head-rice out-turn',pct(c.head)+(c.head<s.target.head-1.5?' ▼':''),1],['Total rice (head+broken)',pct(c.total)],['Process loss',pct(c.loss)],['Rice bags ('+s.riceBagKg+' kg)',num(b.headKg/s.riceBagKg)],['Paddy cost',inr(c.paddyCost)],['Processing cost',inr(c.proc)],['By-product credit',inr(c.credit)],['Rice cost ₹/qtl',inr(c.riceCost),1],['Margin @ '+inr(c.ricePrice)+'/qtl',inr(c.margin)+' /qtl'],['Batch margin',inr(c.profit),1]].map(([l,vv,bg])=>`<div><div class="l">${l}</div><div class="v ${bg?'big':''}">${vv}</div></div>`).join('')+(over?`<div style="grid-column:1/-1"><span class="tag crit">! Paddy input exceeds available ${esc(v)} stock</span></div>`:'');
+  return {b,c,over};
+}
+AFTER.milling=()=>{
+  millTouched=false;
+  $('#mPaddy').addEventListener('input',()=>{millFill(false);millCalcView()});
+  $('#mVar').addEventListener('change',()=>{millFill(false);millCalcView()});
+  document.querySelectorAll('.mo').forEach(e=>e.addEventListener('input',()=>{millTouched=true;millCalcView()}));
+  $('#mFill').onclick=()=>{millFill(true);millCalcView()};
+  millCalcView();
+  $('#mSave').onclick=()=>{const r=millCalcView();if(!r||!r.b.headKg){toast('Enter paddy input and outputs');return}if(r.over){toast('Not enough paddy in stock for this batch');return}
+    state.batches.push({id:nextId('B',state.batches),date:V('mDate')||today(),...r.b});state.batches.sort((a,b)=>a.date.localeCompare(b.date));changed(`Batch saved · out-turn ${pct(r.c.head)}`);render()};
+  $('#mCsv').onclick=()=>exportCSV('milling-batches.csv',[['Date','Batch','Variety','Paddy kg','Head rice kg','Broken kg','Bran kg','Husk kg','Out-turn %','Rice cost per qtl','Batch margin'],...state.batches.map(b=>{const c=batchCalc(b);return [b.date,b.id,b.variety,b.paddyKg,b.headKg,b.brokenKg,b.branKg,b.huskKg,c.head.toFixed(2),Math.round(c.riceCost),Math.round(c.profit)]})]);
+  bindDeletes();
+};
+
+/* sales */
+function vSales(){
+  const s=S(),custs=[...new Set(state.sales.map(x=>x.customer))].sort();const list=state.sales.slice().reverse().slice(0,150);
+  const items=[...s.varieties.map(v=>'rice:'+v),'broken','bran','husk'];
+  return `<h1>Sales</h1><p class="sub">Enter quantity in bags, kg or quintals — the invoice value, GST and stock reduction are worked out automatically.</p>
+  <div class="card"><h2>New sale</h2><datalist id="custList">${custs.map(x=>`<option value="${esc(x)}">`).join('')}</datalist><div class="form" id="sForm">
+    <div class="f"><label>Date</label><input type="date" id="sDate" value="${today()}"></div>
+    <div class="f" style="grid-column:span 2"><label>Customer</label><input id="sCust" list="custList" placeholder="Name"><div class="hint" id="sPos"></div></div>
+    <div class="f"><label>Item</label><select id="sItem">${items.map(k=>`<option value="${esc(k)}">${esc(itemName(k))}</option>`).join('')}</select><div class="hint" id="sAvail"></div></div>
+    <div class="f"><label>Quantity</label><input type="number" id="sQty" placeholder="120"></div>
+    <div class="f"><label>Unit</label><select id="sUnit"><option value="bag">Bags (${s.riceBagKg} kg)</option><option value="kg">Kg</option><option value="qtl">Quintal</option></select></div>
+    <div class="f"><label>Rate (₹ / qtl)</label><input type="number" id="sRate"></div>
+    <div class="f"><label>GST %</label><input type="number" step="0.5" id="sGst"></div>
+  </div><div class="calc" id="sOut"></div>
+  <div class="row" style="margin-top:12px"><button class="btn primary" id="sSave">Save sale</button><span class="muted" style="font-size:12.5px">Reduces stock instantly. GST rate is editable — confirm with your tax advisor.</span></div></div>
+  <div class="card" id="salesReg" style="margin-top:16px"><div class="sec-h"><h2>Sales register</h2><button class="btn sm" id="sCsv">Export CSV</button></div><div class="tw"><table><thead><tr><th>Date</th><th>Invoice</th><th>Customer</th><th>Item</th><th class="n">Kg</th><th class="n">Rate</th><th class="n">Taxable</th><th class="n">GST</th><th class="n">Total</th><th></th></tr></thead><tbody>${list.map(x=>`<tr data-row="${x.id}"><td>${fmtDate(x.date)}</td><td class="muted">${esc(x.invoiceNo)}</td><td>${esc(x.customer)}</td><td>${esc(itemName(x.item))}</td><td class="n">${num(x.kg)}</td><td class="n">${num(x.rate)}</td><td class="n">${inr(x.amount)}</td><td class="n">${inr(x.tax)}</td><td class="n">${inr(x.total)}</td><td class="n"><button class="btn sm" data-inv="${x.id}">Invoice</button> <button class="btn sm danger" data-del="sales:${x.id}">✕</button></td></tr>`).join('')}</tbody></table></div></div>`;
+}
+function saleDefaults(){const s=S(),k=V('sItem');$('#sRate').value=k.startsWith('rice:')?s.prices.rice[k.slice(5)]:s.prices[k];$('#sGst').value=k.startsWith('rice:')?s.gst.rice:s.gst[k];$('#sUnit').value=k.startsWith('rice:')?'bag':'kg'}
+function saleCalcView(){
+  const s=S(),k=V('sItem'),m=stockMap(state),q=F('sQty'),u=V('sUnit');
+  const kg=u==='bag'?q*s.riceBagKg:u==='qtl'?q*100:q;const amt=Math.round(kg/100*F('sRate')),tax=Math.round(amt*F('sGst')/100);
+  $('#sAvail').textContent='Available: '+num(m[k])+' kg ('+num(m[k]/s.riceBagKg)+' bags)';
+  const over=kg>m[k];
+  $('#sOut').innerHTML=[['Quantity',num(kg)+' kg · '+qtl(kg)+' qtl'],['Price per bag',inr(F('sRate')*s.riceBagKg/100,2)],['Price per kg',inr(F('sRate')/100,2)],['Taxable value',inr(amt)],['GST',inr(tax)],['Invoice total',inr(amt+tax),1],['Stock after sale',num(m[k]-kg)+' kg']].map(([l,v,b])=>`<div><div class="l">${l}</div><div class="v ${b?'big':''}">${v}</div></div>`).join('')+(over?'<div style="grid-column:1/-1"><span class="tag crit">! Quantity exceeds stock on hand</span></div>':'');
+  return {kg,amt,tax,over};
+}
+AFTER.sales=()=>{
+  saleDefaults();saleCalcView();
+  $('#sForm').addEventListener('input',saleCalcView);
+  $('#sItem').addEventListener('change',()=>{saleDefaults();saleCalcView()});
+  $('#sSave').onclick=()=>{const r=saleCalcView();if(!V('sCust').trim()||!r.kg){toast('Enter customer and quantity');return}if(r.over){toast('Not enough stock for this sale');return}
+    const cu=V('sCust').trim();const ns={id:nextId('S',state.sales),invoiceNo:nextNo(S().firm.invPrefix,state.sales,'invoiceNo'),inter:isInter(cu),date:V('sDate')||today(),customer:cu,item:V('sItem'),kg:r.kg,rate:F('sRate'),gst:F('sGst'),amount:r.amt,tax:r.tax,total:r.amt+r.tax};state.sales.push(ns);state.sales.sort((a,b)=>a.date.localeCompare(b.date));syncParties(state);changed('Sale saved · '+inr(r.amt+r.tax));render();showDoc('Invoice '+ns.invoiceNo,invoiceDoc(ns),'invoice-'+ns.invoiceNo.replace(/\W+/g,'-')+'.html')};
+  document.querySelectorAll('[data-inv]').forEach(b=>b.onclick=()=>{const x=state.sales.find(y=>y.id===b.dataset.inv);showDoc('Invoice '+x.invoiceNo,invoiceDoc(x),'invoice-'+x.invoiceNo.replace(/\W+/g,'-')+'.html')});
+  const posHint=()=>{const n=V('sCust').trim(),p=partyOf(n);$('#sPos').textContent=!n?'':(p?(isInter(n)?'Inter-state ('+(STATES[p.stateCode]||p.stateCode)+') → IGST':'Within state → CGST + SGST')+(p.gstin?' · GSTIN '+p.gstin:' · unregistered'):'New customer — add GSTIN in Accounts')};$('#sCust').addEventListener('input',posHint);
+  $('#sCsv').onclick=()=>exportCSV('sales.csv',[['Date','Invoice','Customer','Item','Kg','Rate per qtl','Taxable','GST %','GST','Total'],...state.sales.map(x=>[x.date,x.invoiceNo,x.customer,itemName(x.item),x.kg,x.rate,x.amount,x.gst,x.tax,x.total])]);
+  bindDeletes();
+};
+
+/* calculators */
+function vCalculators(){
+  const s=S();const vo=s.varieties.map(v=>`<option>${esc(v)}</option>`).join('');
+  const field=(id,l,val,h,step)=>`<div class="f"><label>${l}</label><input type="number" id="${id}" value="${val}" ${step?'step="'+step+'"':''}>${h?'<div class="hint">'+h+'</div>':''}</div>`;
+  return `<h1>Calculators</h1><p class="sub">Quick answers for the weighbridge, the mill floor and the sales desk. Values default to your Settings.</p>
+  <div class="grid g2">
+  <div class="card"><h2>1 · Paddy weighbridge & payment</h2><div class="form c1">${field('c1Load','Loaded vehicle (kg)',18450)}${field('c1Empty','Empty vehicle (kg)',3250)}${field('c1Bags','Bags',200)}${field('c1Tare','Tare / bag (kg)',s.tarePerBag,'',0.1)}${field('c1Moist','Moisture %',16.8,'Std '+s.stdMoisture+'%',0.1)}${field('c1Fm','Foreign matter %',0.5,'',0.1)}${field('c1Rate','Rate ₹/qtl',s.prices.paddy[s.varieties[0]])}</div><div class="calc" id="c1Out"></div><div class="row" style="margin-top:10px"><button class="btn sm" id="c1Use">Use in purchase entry →</button></div></div>
+  <div class="card"><h2>2 · Out-turn & rice cost</h2><div class="form c2"><div class="f"><label>Variety</label><select id="c2Var">${vo}</select></div>${field('c2Paddy','Paddy (qtl)',100)}${field('c2Rate','Paddy cost ₹/qtl',Math.round(avgPaddyRate(s.varieties[0])))}${field('c2Head','Head-rice out-turn %',s.yieldByVariety[s.varieties[0]],'',0.1)}${field('c2Broken','Broken %',s.target.broken,'',0.1)}${field('c2Proc','Processing ₹/qtl paddy',s.processingCost)}${field('c2Sell','Rice selling ₹/qtl',s.prices.rice[s.varieties[0]])}</div><div class="calc" id="c2Out"></div></div>
+  <div class="card"><h2>3 · Order planner (how much paddy do I need?)</h2><div class="form c3"><div class="f"><label>Variety</label><select id="c3Var">${vo}</select></div>${field('c3Bags','Rice order (bags)',4000)}${field('c3BagKg','Bag size (kg)',s.riceBagKg)}${field('c3Yield','Expected out-turn %',s.yieldByVariety[s.varieties[0]],'',0.1)}${field('c3Cap','Mill capacity (qtl paddy / day)',250)}</div><div class="calc" id="c3Out"></div></div>
+  <div class="card"><h2>4 · Selling price & GST</h2><div class="form c4">${field('c4Cost','Rice cost ₹/qtl',4200)}${field('c4Margin','Target margin %',10,'',0.5)}${field('c4Gst','GST %',s.gst.rice,'',0.5)}${field('c4Bag','Bag size (kg)',s.riceBagKg)}${field('c4Pack','Packing ₹/bag',18)}</div><div class="calc" id="c4Out"></div></div>
+  <div class="card"><h2>5 · Moisture / drying shrink</h2><div class="form c5">${field('c5Kg','Wet paddy (kg)',10000)}${field('c5From','Current moisture %',19,'',0.1)}${field('c5To','Target moisture %',14,'',0.1)}${field('c5Rate','Paddy rate ₹/qtl',s.prices.paddy[s.varieties[0]])}</div><div class="calc" id="c5Out"></div><p class="muted" style="font-size:12px;margin:8px 0 0">Uses dry-matter balance: dry weight = wet × (100 − m₁) ÷ (100 − m₂).</p></div>
+  <div class="card"><h2>6 · Unit converter</h2><div class="form c6">${field('c6Val','Value',50)}<div class="f"><label>From</label><select id="c6From"><option value="kg">Kilograms</option><option value="qtl" selected>Quintals</option><option value="t">Tonnes</option><option value="pb">Paddy bags (${s.paddyBagKg} kg)</option><option value="rb">Rice bags (${s.riceBagKg} kg)</option></select></div></div><div class="calc" id="c6Out"></div></div>
+  </div>`;
+}
+function calcAll(){
+  const s=S(),out=(id,arr)=>$('#'+id).innerHTML=arr.map(([l,v,b])=>`<div><div class="l">${l}</div><div class="v ${b?'big':''}">${v}</div></div>`).join('');
+  // 1
+  const gross=F('c1Load')-F('c1Empty');const c=calcPurchase(s,{gross,bags:F('c1Bags'),moist:F('c1Moist'),rate:F('c1Rate'),tare:F('c1Tare'),fm:F('c1Fm')});
+  out('c1Out',[['Gross paddy',num(gross)+' kg'],['Tare',num(c.tareKg)+' kg'],['Moisture cut',num(c.moistKg)+' kg'],['FM cut',num(c.fmKg)+' kg'],['Net weight',num(c.net)+' kg',1],['Avg per bag',num(c.net/(F('c1Bags')||1),1)+' kg'],['Pay farmer',inr(c.amount),1],['+ Hamali',inr(c.hamali)]]);
+  // 2
+  const pq=F('c2Paddy'),head=pq*F('c2Head')/100,br=pq*F('c2Broken')/100,bran=pq*s.target.bran/100,husk=pq*s.target.husk/100;
+  const cost=pq*F('c2Rate')+pq*F('c2Proc'),credit=br*s.prices.broken+bran*s.prices.bran+husk*s.prices.husk;const rc=head?(cost-credit)/head:0;
+  out('c2Out',[['Head rice',num(head,1)+' qtl'],['Rice bags',num(head*100/s.riceBagKg)],['Broken / bran / husk',num(br,1)+' / '+num(bran,1)+' / '+num(husk,1)+' qtl'],['Total cost',inr(cost)],['By-product credit',inr(credit)],['Rice cost ₹/qtl',inr(rc),1],['Break-even ₹/kg',inr(rc/100,2)],['Profit @ sell price',inr((F('c2Sell')-rc)*head),1],['Margin',pct(F('c2Sell')?(F('c2Sell')-rc)/F('c2Sell')*100:0)]]);
+  // 3
+  const riceKg=F('c3Bags')*F('c3BagKg'),pad=F('c3Yield')?riceKg/(F('c3Yield')/100):0,m=stockMap(state),avail=m['paddy:'+V('c3Var')],ricehave=m['rice:'+V('c3Var')];
+  const netNeed=Math.max(0,riceKg-ricehave),padNeed=F('c3Yield')?netNeed/(F('c3Yield')/100):0;
+  out('c3Out',[['Rice required',num(riceKg)+' kg'],['Paddy to mill (full order)',qtl(pad)+' qtl',1],['Rice already in stock',num(ricehave)+' kg'],['Paddy needed after stock',qtl(padNeed)+' qtl',1],['Paddy in godown',qtl(avail)+' qtl'],['Paddy to buy',qtl(Math.max(0,padNeed-avail))+' qtl'],['Milling days',F('c3Cap')?num(padNeed/100/F('c3Cap'),1):'—'],['Paddy bags to buy',num(Math.max(0,padNeed-avail)/s.paddyBagKg)]]);
+  // 4
+  const base=F('c4Cost')*(1+F('c4Margin')/100),bag=F('c4Bag'),perBag=base*bag/100+F('c4Pack'),gst=perBag*F('c4Gst')/100;
+  out('c4Out',[['Selling ₹/qtl (ex-GST)',inr(base),1],['Per kg',inr(base/100,2)],['Per bag ex-GST',inr(perBag,2)],['GST per bag',inr(gst,2)],['Bag price incl. GST',inr(perBag+gst,2),1],['Profit per bag',inr(perBag-F('c4Cost')*bag/100-F('c4Pack'),2)]]);
+  // 5
+  const wet=F('c5Kg'),m1=F('c5From'),m2=F('c5To'),dry=m2<100?wet*(100-m1)/(100-m2):0;
+  out('c5Out',[['Weight after drying',num(dry)+' kg',1],['Water removed',num(wet-dry)+' kg'],['Shrink',pct(wet?(wet-dry)/wet*100:0,2)],['Effective rate on dry ₹/qtl',inr(dry?F('c5Rate')*wet/dry:0)]]);
+  // 6
+  const f={kg:1,qtl:100,t:1000,pb:s.paddyBagKg,rb:s.riceBagKg}[V('c6From')],kg=F('c6Val')*f;
+  out('c6Out',[['Kilograms',num(kg,1)],['Quintals',num(kg/100,2)],['Tonnes',num(kg/1000,3)],['Paddy bags',num(kg/s.paddyBagKg,1)],['Rice bags',num(kg/s.riceBagKg,1)]]);
+}
+AFTER.calculators=()=>{
+  $('#main').addEventListener('input',calcAll);
+  const s=S();
+  $('#c2Var').onchange=()=>{const v=V('c2Var');$('#c2Rate').value=Math.round(avgPaddyRate(v));$('#c2Head').value=s.yieldByVariety[v];$('#c2Sell').value=s.prices.rice[v];calcAll()};
+  $('#c3Var').onchange=()=>{$('#c3Yield').value=s.yieldByVariety[V('c3Var')];calcAll()};
+  $('#c6From').onchange=calcAll;
+  $('#c1Use').onclick=()=>{try{sessionStorage.setItem('ricemill-prefill',JSON.stringify({pBags:F('c1Bags'),pGross:F('c1Load')-F('c1Empty'),pTare:F('c1Tare'),pMoist:F('c1Moist'),pFm:F('c1Fm'),pRate:F('c1Rate')}))}catch(e){}location.hash='purchases'};
+  calcAll();
+};
+
+/* reports */
+let rPeriod='90';
+function period(){
+  const ld=lastDate();const d=new Date(ld+'T00:00:00');
+  const iso=x=>x.getFullYear()+'-'+String(x.getMonth()+1).padStart(2,'0')+'-'+String(x.getDate()).padStart(2,'0');
+  if(rPeriod==='all')return {from:'0000',to:'9999',label:'All time'};
+  if(rPeriod==='mtd')return {from:ld.slice(0,8)+'01',to:'9999',label:monthName(ym(ld))+' to date'};
+  if(/^\d{4}-\d{2}$/.test(rPeriod))return {from:rPeriod+'-01',to:rPeriod+'-31',label:monthName(rPeriod)};
+  const f=new Date(d);f.setDate(f.getDate()-(+rPeriod)+1);return {from:iso(f),to:'9999',label:'Last '+rPeriod+' days'};
+}
+function reportData(){
+  const s=S(),per=period();
+  const P=state.purchases.filter(x=>inPeriod(x.date,per)),B=state.batches.filter(x=>inPeriod(x.date,per)),SL=state.sales.filter(x=>inPeriod(x.date,per));
+  const bc=B.map(b=>[b,batchCalc(b)]);
+  const paddyIn=sum(B,b=>b.paddyKg),headOut=sum(B,b=>b.headKg);
+  const r={per,P,B,SL,bc,
+    purchaseAmt:sum(P,p=>p.amount+p.hamali),purchaseKg:sum(P,p=>p.netKg),
+    salesAmt:sum(SL,x=>x.amount),salesTax:sum(SL,x=>x.tax),salesKg:sum(SL.filter(x=>x.item.startsWith('rice:')),x=>x.kg),
+    riceSalesAmt:sum(SL.filter(x=>x.item.startsWith('rice:')),x=>x.amount),byAmt:sum(SL.filter(x=>!x.item.startsWith('rice:')),x=>x.amount),
+    paddyIn,headOut,yield:paddyIn?headOut/paddyIn*100:0,
+    millProfit:sum(bc,([b,c])=>c.profit),millCost:sum(bc,([b,c])=>c.paddyCost+c.proc),
+    moistDeduct:sum(P,p=>{const c=calcPurchase(s,{gross:p.grossKg,bags:p.bags,moist:p.moisture,rate:p.rate,tare:p.tarePerBag,fm:p.fm});return c.moistKg})
+  };
+  r.lostYieldKg=sum(B,b=>Math.max(0,(s.yieldByVariety[b.variety]||s.target.head)/100*b.paddyKg-b.headKg));
+  r.lostYieldValue=sum(B,b=>Math.max(0,(s.yieldByVariety[b.variety]||s.target.head)/100*b.paddyKg-b.headKg)/100*((s.prices.rice[b.variety]||0)-s.prices.broken));
+  r.variety=s.varieties.map(v=>{const vb=bc.filter(([b])=>b.variety===v),pk=sum(vb,([b])=>b.paddyKg),hk=sum(vb,([b])=>b.headKg),bk=sum(vb,([b])=>b.brokenKg);
+    const cost=sum(vb,([b,c])=>c.paddyCost+c.proc-c.credit);const rc=hk?cost/(hk/100):0;const vs=SL.filter(x=>x.item==='rice:'+v);const avgSell=sum(vs,x=>x.kg)?sum(vs,x=>x.amount)/(sum(vs,x=>x.kg)/100):s.prices.rice[v];
+    return {v,n:vb.length,pk,hk,y:pk?hk/pk*100:0,br:pk?bk/pk*100:0,rc,avgSell,margin:avgSell-rc,profit:sum(vb,([b,c])=>c.profit),soldKg:sum(vs,x=>x.kg),std:s.yieldByVariety[v]}});
+  const sm={};P.forEach(p=>{const o=sm[p.supplier]||(sm[p.supplier]={n:0,kg:0,gross:0,amt:0,mw:0});o.n++;o.kg+=p.netKg;o.gross+=p.grossKg;o.amt+=p.amount;o.mw+=p.moisture*p.grossKg});
+  r.suppliers=Object.entries(sm).map(([k,o])=>({name:k,n:o.n,kg:o.kg,amt:o.amt,rate:o.kg?o.amt/(o.kg/100):0,moist:o.gross?o.mw/o.gross:0,shrink:o.gross?(1-o.kg/o.gross)*100:0})).sort((a,b)=>b.kg-a.kg);
+  const cm={};SL.forEach(x=>{const o=cm[x.customer]||(cm[x.customer]={n:0,kg:0,amt:0,items:new Set()});o.n++;o.kg+=x.kg;o.amt+=x.amount;o.items.add(itemName(x.item))});
+  r.customers=Object.entries(cm).map(([k,o])=>({name:k,n:o.n,kg:o.kg,amt:o.amt,share:r.salesAmt?o.amt/r.salesAmt*100:0,rate:o.kg?o.amt/(o.kg/100):0,items:[...o.items].join(', ')})).sort((a,b)=>b.amt-a.amt);
+  const mm={};monthsAll().forEach(k=>mm[k]={p:0,s:0,y1:0,y2:0});state.purchases.forEach(p=>mm[ym(p.date)].p+=p.amount+p.hamali);state.sales.forEach(x=>mm[ym(x.date)].s+=x.amount);state.batches.forEach(b=>{mm[ym(b.date)].y1+=b.headKg;mm[ym(b.date)].y2+=b.paddyKg});
+  r.months=Object.entries(mm).map(([k,o])=>({k,p:o.p,s:o.s,y:o.y2?o.y1/o.y2*100:null}));
+  r.mix=paddyIn?{head:headOut/paddyIn*100,broken:sum(B,b=>b.brokenKg)/paddyIn*100,bran:sum(B,b=>b.branKg)/paddyIn*100,husk:sum(B,b=>b.huskKg)/paddyIn*100}:null;
+  if(r.mix)r.mix.loss=Math.max(0,100-r.mix.head-r.mix.broken-r.mix.bran-r.mix.husk);
+  return r;
+}
+function insights(r){
+  const s=S(),out=[];
+  if(!r.B.length&&!r.SL.length)return [{l:'info',t:'No activity in this period.'}];
+  if(r.paddyIn){const d=r.yield-s.target.head;out.push({l:d>=0?'good':(d>-1?'warn':'crit'),t:`Head-rice out-turn averaged <b>${pct(r.yield)}</b> against a ${pct(s.target.head,0)} target (${d>=0?'+':''}${d.toFixed(1)} pts).`})}
+  const wv=r.variety.filter(x=>x.n).sort((a,b)=>(a.y-a.std)-(b.y-b.std))[0];
+  if(wv&&wv.y<wv.std-0.8)out.push({l:'warn',t:`<b>${esc(wv.v)}</b> is under-performing: ${pct(wv.y)} out-turn vs its ${pct(wv.std)} standard, broken at ${pct(wv.br)}. Check paddy moisture, huller rubber and polisher settings.`});
+  if(r.lostYieldKg>500)out.push({l:'warn',t:`Batches below variety standard lost about <b>${qtl(r.lostYieldKg)} qtl</b> of head rice — roughly <b>${inrC(r.lostYieldValue)}</b> of revenue at price-list rates.`});
+  const bv=r.variety.filter(x=>x.n).sort((a,b)=>b.margin-a.margin);
+  if(bv.length>1)out.push({l:'info',t:`Best margin is on <b>${esc(bv[0].v)}</b> (${inr(bv[0].margin)}/qtl); lowest on <b>${esc(bv[bv.length-1].v)}</b> (${inr(bv[bv.length-1].margin)}/qtl). Prioritise the higher-margin variety when buying paddy.`});
+  const wet=r.suppliers.filter(x=>x.moist>=17&&x.kg>5000).sort((a,b)=>b.moist-a.moist)[0];
+  if(wet)out.push({l:'warn',t:`<b>${esc(wet.name)}</b> delivers the wettest paddy (avg ${wet.moist.toFixed(1)}% moisture, ${wet.shrink.toFixed(1)}% total weight deduction). Negotiate rate or insist on drying.`});
+  const top=r.customers[0];if(top&&top.share>25)out.push({l:'warn',t:`<b>${esc(top.name)}</b> accounts for ${pct(top.share,0)} of sales — a high dependence on one buyer.`});else if(top)out.push({l:'good',t:`Sales are well spread: the largest customer, ${esc(top.name)}, is ${pct(top.share,0)} of revenue.`});
+  if(r.salesAmt)out.push({l:'info',t:`By-products (broken, bran, husk) brought in <b>${inrC(r.byAmt)}</b>, or ${pct(r.byAmt/r.salesAmt*100)} of sales — they lower rice cost by ${inr(sum(r.bc,([b,c])=>c.credit)/Math.max(1,r.headOut/100))}/qtl.`});
+  const al=alerts().filter(a=>a.lvl==='crit');if(al.length)out.push({l:'crit',t:`${al.length} item(s) are below half their reorder level: ${al.map(a=>esc(a.t.split(' is at')[0])).join(', ')}.`});
+  return out;
+}
+function vReports(){
+  const r=reportData(),s=S(),months=monthsAll();
+  const segs=[['30','30 days'],['90','90 days'],['mtd','This month'],['all','All']];
+  const mixCol={head:'var(--s1)',broken:'var(--s2)',bran:'var(--s3)',husk:'var(--s4)',loss:'var(--muted)'};
+  return `<div class="sec-h"><div><h1>Management report</h1><p class="sub" style="margin:0">${r.per.label} · ${r.B.length} batches · ${r.P.length} purchases · ${r.SL.length} invoices</p></div>
+   <div class="row noprint"><div class="seg">${segs.map(([k,l])=>`<button data-p="${k}" class="${rPeriod===k?'on':''}">${l}</button>`).join('')}</div><select id="rMonth" class="btn sm"><option value="">Pick month…</option>${months.map(k=>`<option value="${k}" ${rPeriod===k?'selected':''}>${monthName(k)}</option>`).join('')}</select><button class="btn sm" id="rCopy">Copy summary</button></div></div>
+  <div class="kpis" style="margin-top:14px">
+   <div class="card kpi"><div class="l">Sales (taxable)</div><div class="v">${inrC(r.salesAmt)}</div><div class="d">+ ${inrC(r.salesTax)} GST · ${qtl(r.salesKg)} qtl rice</div></div>
+   <div class="card kpi"><div class="l">Paddy purchased</div><div class="v">${inrC(r.purchaseAmt)}</div><div class="d">${qtl(r.purchaseKg)} qtl net · incl. hamali</div></div>
+   <div class="card kpi"><div class="l">Milling margin</div><div class="v">${inrC(r.millProfit)}</div><div class="d">${r.millCost?pct(r.millProfit/r.millCost*100)+' on cost':'—'} · output valued at price list</div></div>
+   <div class="card kpi"><div class="l">Avg out-turn</div><div class="v">${r.paddyIn?pct(r.yield):'—'}</div><div class="d">${qtl(r.paddyIn)} qtl paddy milled</div></div>
+   <div class="card kpi"><div class="l">Yield loss vs standard</div><div class="v">${qtl(r.lostYieldKg)} qtl</div><div class="d">≈ ${inrC(r.lostYieldValue)} revenue</div></div>
+   <div class="card kpi"><div class="l">Moisture deducted</div><div class="v">${qtl(r.moistDeduct)} qtl</div><div class="d">Saved vs paying on gross weight</div></div>
+  </div>
+  <div class="grid g2">
+   <div class="card"><h2>Key insights</h2><ul class="insights">${insights(r).map(i=>`<li><span class="ic ${i.l}">${{good:'✓',warn:'▲',crit:'!',info:'i'}[i.l]}</span><div>${i.t}</div></li>`).join('')}</ul></div>
+   <div class="card"><h2>Monthly purchases vs sales</h2><div class="legend"><span><i style="background:var(--s1)"></i>Sales</span><span><i style="background:var(--s2)"></i>Paddy purchases</span></div><div class="chart"><canvas id="rMonthly"></canvas></div>
+   ${r.mix?`<h2 style="margin-top:18px">Average output from 100 kg paddy</h2><div class="mix">${Object.entries(r.mix).map(([k,v])=>`<div style="width:${v}%;background:${mixCol[k]}" title="${k} ${v.toFixed(1)}%"></div>`).join('')}</div><div class="legend" style="margin:0">${Object.entries(r.mix).map(([k,v])=>`<span><i style="background:${mixCol[k]}"></i>${{head:'Head rice',broken:'Broken',bran:'Bran',husk:'Husk',loss:'Loss'}[k]} <b style="color:var(--text)">${v.toFixed(1)}%</b></span>`).join('')}</div>`:''}</div>
+  </div>
+  <div class="card" style="margin-top:16px"><h2>Variety profitability</h2><div class="tw"><table><thead><tr><th>Variety</th><th class="n">Batches</th><th class="n">Paddy milled (qtl)</th><th class="n">Out-turn</th><th class="n">Standard</th><th class="n">Broken</th><th class="n">Rice cost ₹/qtl</th><th class="n">Avg sell ₹/qtl</th><th class="n">Margin ₹/qtl</th><th class="n">Milling margin</th><th class="n">Rice sold (qtl)</th></tr></thead><tbody>${r.variety.map(x=>`<tr><td>${esc(x.v)}</td><td class="n">${x.n}</td><td class="n">${qtl(x.pk)}</td><td class="n">${x.n?(x.y<x.std-0.8?'<span class="tag warn">▼ '+pct(x.y)+'</span>':pct(x.y)):'—'}</td><td class="n">${pct(x.std)}</td><td class="n">${x.n?pct(x.br):'—'}</td><td class="n">${x.n?inr(x.rc):'—'}</td><td class="n">${inr(x.avgSell)}</td><td class="n">${x.n?inr(x.margin):'—'}</td><td class="n">${inr(x.profit)}</td><td class="n">${qtl(x.soldKg)}</td></tr>`).join('')}</tbody></table></div></div>
+  <div class="card" style="margin-top:16px"><h2>Out-turn by batch</h2><div class="legend">${s.varieties.map((v,i)=>`<span><i style="background:var(--s${i+1})"></i>${esc(v)}</span>`).join('')}<span><i class="dash"></i>Target ${pct(s.target.head,0)}</span></div><div class="chart"><canvas id="rBatch"></canvas></div></div>
+  <div class="grid g2" style="margin-top:16px">
+   <div class="card" id="repSuppliers"><h2>Supplier quality & price</h2><div class="tw"><table><thead><tr><th>Supplier</th><th class="n">Lots</th><th class="n">Net qtl</th><th class="n">Avg ₹/qtl</th><th class="n">Avg moisture</th><th class="n">Weight cut</th></tr></thead><tbody>${r.suppliers.map(x=>`<tr><td>${esc(x.name)}</td><td class="n">${x.n}</td><td class="n">${qtl(x.kg)}</td><td class="n">${inr(x.rate)}</td><td class="n">${x.moist>=17?'<span class="tag warn">'+x.moist.toFixed(1)+'%</span>':x.moist.toFixed(1)+'%'}</td><td class="n">${x.shrink.toFixed(1)}%</td></tr>`).join('')||'<tr><td colspan="6" class="muted">No purchases</td></tr>'}</tbody></table></div></div>
+   <div class="card"><h2>Customers</h2><div class="tw"><table><thead><tr><th>Customer</th><th class="n">Invoices</th><th class="n">Qty (qtl)</th><th class="n">Sales</th><th class="n">Share</th><th class="n">Avg ₹/qtl</th></tr></thead><tbody>${r.customers.map(x=>`<tr title="${esc(x.items)}"><td>${esc(x.name)}</td><td class="n">${x.n}</td><td class="n">${qtl(x.kg)}</td><td class="n">${inr(x.amt)}</td><td class="n">${pct(x.share)}</td><td class="n">${inr(x.rate)}</td></tr>`).join('')||'<tr><td colspan="6" class="muted">No sales</td></tr>'}</tbody></table></div></div>
+  </div>
+  <p class="muted" style="font-size:12px;margin-top:14px">Milling margin = value of head rice and by-products at price-list rates − paddy cost (weighted avg purchase rate) − processing cost (${inr(s.processingCost)}/qtl paddy). Yield loss compares each batch to its variety standard. Edit rates and standards in Settings.</p>`;
+}
+AFTER.reports=()=>{
+  document.querySelectorAll('.seg button').forEach(b=>b.onclick=()=>{rPeriod=b.dataset.p;render()});
+  $('#rMonth').onchange=e=>{if(e.target.value){rPeriod=e.target.value;render()}};
+  const r=reportData(),s=S();
+  $('#rCopy').onclick=()=>{const t=`${s.millName} — Management summary (${r.per.label})\nSales: ${inr(r.salesAmt)} (+GST ${inr(r.salesTax)}), rice ${qtl(r.salesKg)} qtl\nPaddy purchased: ${inr(r.purchaseAmt)} for ${qtl(r.purchaseKg)} qtl\nPaddy milled: ${qtl(r.paddyIn)} qtl, avg out-turn ${pct(r.yield)} (target ${pct(s.target.head,0)})\nMilling margin: ${inr(r.millProfit)}\nYield loss vs standard: ${qtl(r.lostYieldKg)} qtl (~${inr(r.lostYieldValue)})\n\nInsights:\n`+insights(r).map(i=>'• '+i.t.replace(/<[^>]+>/g,'')).join('\n');
+    navigator.clipboard.writeText(t).then(()=>toast('Summary copied — paste into WhatsApp or email'),()=>showText('Management summary',t))};
+  chart('rMonthly',{type:'bar',data:{labels:r.months.map(m=>monthName(m.k)),datasets:[{label:'Sales',data:r.months.map(m=>Math.round(m.s)),backgroundColor:cv('--s1'),borderRadius:4},{label:'Paddy purchases',data:r.months.map(m=>Math.round(m.p)),backgroundColor:cv('--s2'),borderRadius:4}]},options:baseOpts({datasets:{bar:{barPercentage:.8,categoryPercentage:.7,borderColor:cv('--surface'),borderWidth:{left:1,right:1}}},scales:{x:{grid:{display:false},ticks:{color:cv('--text-2')}},y:{grid:{color:cv('--grid')},border:{display:false},ticks:{color:cv('--text-2'),callback:v=>inrC(v)}}},plugins:{...baseOpts().plugins,tooltip:{...baseOpts().plugins.tooltip,callbacks:{label:c=>c.dataset.label+': '+inr(c.parsed.y)}}}})});
+  const labels=r.B.map(b=>b.id);
+  chart('rBatch',{type:'line',data:{labels,datasets:[...s.varieties.slice(0,4).map((v,i)=>({label:v,data:r.B.map(b=>b.variety===v?+(b.headKg/b.paddyKg*100).toFixed(2):null),borderColor:cv('--s'+(i+1)),backgroundColor:cv('--s'+(i+1)),showLine:false,pointRadius:4.5,pointHoverRadius:7,pointBorderColor:cv('--surface'),pointBorderWidth:1.5})),{label:'Target',data:labels.map(()=>s.target.head),borderColor:cv('--muted'),borderDash:[5,4],borderWidth:1.5,pointRadius:0}]},options:baseOpts({interaction:{mode:'nearest',intersect:false},scales:{x:{grid:{display:false},ticks:{color:cv('--text-2'),font:{size:10},callback:function(v){const b=r.B[v];return b?fmtDate(b.date):''},maxTicksLimit:10,maxRotation:0}},y:{grid:{color:cv('--grid')},border:{display:false},ticks:{color:cv('--text-2'),callback:v=>v+'%'},suggestedMin:60,suggestedMax:70}},plugins:{...baseOpts().plugins,tooltip:{...baseOpts().plugins.tooltip,filter:c=>c.parsed.y!=null&&c.dataset.label!=='Target',callbacks:{title:c=>{const b=r.B[c[0].dataIndex];return b.id+' · '+fmtDate(b.date)},label:c=>c.dataset.label+': '+c.parsed.y.toFixed(1)+'% of '+num(r.B[c.dataIndex].paddyKg)+' kg'}}}})});
+};
+
+/* settings */
+function vSettings(){
+  const s=S(),inp=(path,l,val,step,h)=>`<div class="f"><label>${l}</label><input data-path="${path}" ${typeof val==='number'?'type="number"':''} ${step?'step="'+step+'"':''} value="${esc(val)}">${h?'<div class="hint">'+h+'</div>':''}</div>`;
+  return `<h1>Settings</h1><p class="sub">These rates and standards drive every automatic calculation. Changes apply immediately.</p>
+  <div class="stack">
+  ${licenceCard()}
+  <div class="card"><h2>Mill</h2><div class="form">${inp('millName','Mill name',s.millName)}${inp('location','Subtitle / location',s.location)}${inp('paddyBagKg','Paddy bag (kg)',s.paddyBagKg)}${inp('riceBagKg','Rice bag (kg)',s.riceBagKg)}${inp('processingCost','Processing cost ₹/qtl paddy',s.processingCost,1,'Power, labour, maintenance')}</div></div>
+  <div class="card"><h2>Firm & GST details (printed on invoices)</h2><div class="form">${inp('firm.gstin','GSTIN',s.firm.gstin,0,'Demo value — replace with yours')}<div class="f" style="grid-column:span 2"><label>Address</label><input data-path="firm.address" value="${esc(s.firm.address)}"></div><div class="f"><label>State</label><select data-path="firm.stateCode">${stateOpts(s.firm.stateCode)}</select></div>${inp('firm.phone','Phone',s.firm.phone)}<div class="f" style="grid-column:span 2"><label>Bank details (on invoice)</label><input data-path="firm.bank" value="${esc(s.firm.bank)}" placeholder="Bank, A/c no, IFSC"></div>${inp('firm.invPrefix','Invoice prefix',s.firm.invPrefix)}${inp('firm.billPrefix','Purchase bill prefix',s.firm.billPrefix)}${inp('creditDays','Customer credit days',s.creditDays)}</div>
+  <div class="form" style="margin-top:10px">${inp('hsn.paddy','HSN · paddy',s.hsn.paddy)}${inp('hsn.rice','HSN · rice',s.hsn.rice)}${inp('hsn.broken','HSN · broken',s.hsn.broken)}${inp('hsn.bran','HSN · bran',s.hsn.bran)}${inp('hsn.husk','HSN · husk',s.hsn.husk)}</div><p class="muted" style="font-size:12px;margin:10px 0 0">HSN codes are editable defaults — confirm with your accountant.</p></div>
+  <div class="card"><h2>Purchase rules</h2><div class="form">${inp('stdMoisture','Standard moisture %',s.stdMoisture,0.1)}${inp('moistureFactor','Kg cut per 1% excess (per 100 kg)',s.moistureFactor,0.1,'1 = 1 kg per qtl per %')}${inp('tarePerBag','Tare per bag (kg)',s.tarePerBag,0.1)}${inp('hamaliPerBag','Hamali ₹/bag',s.hamaliPerBag,0.5)}</div></div>
+  <div class="card"><h2>Yield standards (% of paddy)</h2><div class="form">${s.varieties.map(v=>inp('yieldByVariety.'+v,'Head rice · '+esc(v),s.yieldByVariety[v],0.1)).join('')}${inp('target.head','Overall head-rice target',s.target.head,0.1)}${inp('target.broken','Broken',s.target.broken,0.1)}${inp('target.bran','Bran',s.target.bran,0.1)}${inp('target.husk','Husk',s.target.husk,0.1)}</div></div>
+  <div class="card"><h2>Price list (₹ / quintal)</h2><div class="form">${s.varieties.map(v=>inp('prices.paddy.'+v,'Paddy · '+esc(v),s.prices.paddy[v])).join('')}${s.varieties.map(v=>inp('prices.rice.'+v,'Rice · '+esc(v),s.prices.rice[v])).join('')}${inp('prices.broken','Broken rice',s.prices.broken)}${inp('prices.bran','Bran',s.prices.bran)}${inp('prices.husk','Husk',s.prices.husk)}</div></div>
+  <div class="card"><h2>GST % and reorder levels (kg)</h2><div class="form">${inp('gst.rice','GST · rice',s.gst.rice,0.5)}${inp('gst.broken','GST · broken',s.gst.broken,0.5)}${inp('gst.bran','GST · bran',s.gst.bran,0.5)}${inp('gst.husk','GST · husk',s.gst.husk,0.5)}${inp('reorder.paddy','Reorder · each paddy variety',s.reorder.paddy)}${inp('reorder.rice','Reorder · each rice variety',s.reorder.rice)}</div><p class="muted" style="font-size:12px;margin:10px 0 0">GST rates shown are editable defaults — confirm the applicable rates with your tax advisor.</p></div>
+  ${syncCard()}
+  <div class="card"><h2>Data</h2><div class="row"><button class="btn" id="stExport">Backup (JSON)</button><button class="btn" id="stImport">Restore from backup</button><button class="btn danger" id="stDemo">Reload demo data</button><button class="btn danger" id="stBlank">Start fresh (empty)</button></div><p class="muted" style="font-size:12px;margin:10px 0 0">${BUILD==='pwa'?'Restore, demo data and start fresh also change every device that syncs with this mill.':artifactApi?'Press <b>Save</b> at the top to keep changes in this page for everyone you share it with.':'Changes are kept in this browser.'}</p></div>
+  </div>`;
+}
+AFTER.settings=()=>{
+  bindPaths();
+  bindSyncCard();bindLicenceCard();
+  $('#stExport').onclick=()=>{const t=JSON.stringify(state);if(downloadsApi)exportFile('ricemill-backup-'+today()+'.json',t,'application/json');else showText('Backup — copy and keep this text',t)};
+  $('#stImport').onclick=()=>showText('Paste a backup to restore','',true);
+  $('#stDemo').onclick=e=>confirmBtn(e.target,()=>{const sv=state.savedAt,keep={licence:S().licence,installedOn:S().installedOn,lastSeen:S().lastSeen,millName:S().millName};state=seed();Object.assign(state.settings,keep);state.savedAt=sv;changed('Demo data reloaded');render()});
+  $('#stBlank').onclick=e=>confirmBtn(e.target,()=>{const sv=state.savedAt;const s=S();s.opening={};state={v:2,savedAt:sv,settings:s,purchases:[],batches:[],sales:[],adjustments:[],payments:[],parties:[],cmr:{lots:[],deliveries:[]},seq:1,invSeq:1,billSeq:1};changed('Started fresh — enter opening stock via Inventory → Adjustment');render()});
+};
+
+/* ---------- parties, GST helpers ---------- */
+function partyOf(name){return state.parties.find(p=>p.name===name)}
+function isInter(name){const p=partyOf(name);return !!(p&&p.stateCode&&p.stateCode!==S().firm.stateCode)}
+function taxParts(x){if(x.inter)return {cgst:0,sgst:0,igst:x.tax};const h=Math.round(x.tax/2*100)/100;return {cgst:h,sgst:Math.round((x.tax-h)*100)/100,igst:0}}
+function hsnOf(item){const h=S().hsn;return item.startsWith('rice:')?h.rice:item.startsWith('paddy:')?h.paddy:(h[item]||'')}
+function stateOpts(sel){return Object.entries(STATES).map(([c,n])=>`<option value="${c}" ${c===sel?'selected':''}>${c} · ${n}</option>`).join('')}
+function fmtLong(d){const [y,m,dd]=d.split('-');return dd+'-'+m+'-'+y}
+function daysBetween(a,b){return Math.round((new Date(b+'T00:00:00')-new Date(a+'T00:00:00'))/864e5)}
+function inWords(n){n=Math.round(n);if(!n)return 'Zero';const a=['','One','Two','Three','Four','Five','Six','Seven','Eight','Nine','Ten','Eleven','Twelve','Thirteen','Fourteen','Fifteen','Sixteen','Seventeen','Eighteen','Nineteen'],b=['','','Twenty','Thirty','Forty','Fifty','Sixty','Seventy','Eighty','Ninety'];
+  const two=x=>x<20?a[x]:b[Math.floor(x/10)]+(x%10?' '+a[x%10]:'');const three=x=>(x>=100?a[Math.floor(x/100)]+' Hundred'+(x%100?' ':''):'')+(x%100?two(x%100):'');
+  const cr=Math.floor(n/1e7);n%=1e7;const l=Math.floor(n/1e5);n%=1e5;const t=Math.floor(n/1e3);n%=1e3;let s='';
+  if(cr)s+=(cr>=100?inWords(cr):two(cr))+' Crore ';if(l)s+=two(l)+' Lakh ';if(t)s+=two(t)+' Thousand ';if(n)s+=three(n);return s.trim()}
+function bindPaths(){document.querySelectorAll('[data-path]').forEach(e=>e.addEventListener('change',()=>{const parts=e.dataset.path.split('.');let t=S();for(let i=0;i<parts.length-1;i++)t=t[parts[i]];const k=parts[parts.length-1];t[k]=e.type==='number'?(parseFloat(e.value)||0):e.value;changed('Setting updated');renderSave();if(view==='cmr')render()}))}
+function closeModal(){$('#modal').innerHTML=''}
+document.addEventListener('keydown',e=>{if(e.key==='Escape')closeModal()});
+
+/* ---------- accounts ---------- */
+function ledgerFor(name){
+  const rows=[];
+  state.sales.filter(x=>x.customer===name).forEach(x=>rows.push({date:x.date,ref:x.invoiceNo,desc:'Sale · '+itemName(x.item)+' · '+num(x.kg)+' kg',dr:x.total,cr:0}));
+  state.purchases.filter(x=>x.supplier===name).forEach(x=>rows.push({date:x.date,ref:x.billNo,desc:'Paddy · '+x.variety+' · '+num(x.netKg)+' kg net @ ₹'+num(x.rate)+'/qtl',dr:0,cr:x.amount}));
+  state.payments.filter(x=>x.party===name).forEach(x=>rows.push({date:x.date,ref:x.ref||x.id,desc:(x.kind==='receive'?'Received':'Paid')+' · '+x.mode+(x.note?' · '+x.note:''),dr:x.kind==='pay'?x.amount:0,cr:x.kind==='receive'?x.amount:0}));
+  rows.sort((a,b)=>a.date.localeCompare(b.date)||(b.dr+b.cr>0&&a.desc.startsWith('Sale')?-1:0));
+  let bal=0;rows.forEach(r=>{bal+=r.dr-r.cr;r.bal=bal});return rows;
+}
+function partyRows(kind){
+  const asOf=today(),cd=S().creditDays,out=[];
+  state.parties.filter(p=>p.kind===kind).forEach(p=>{
+    const pin=sum(state.payments.filter(x=>x.party===p.name&&x.kind==='receive'),x=>x.amount),pout=sum(state.payments.filter(x=>x.party===p.name&&x.kind==='pay'),x=>x.amount);
+    const docs=kind==='customer'?state.sales.filter(x=>x.customer===p.name).map(x=>({d:x.date,v:x.total})):state.purchases.filter(x=>x.supplier===p.name).map(x=>({d:x.date,v:x.amount}));
+    docs.sort((a,b)=>a.d.localeCompare(b.d));
+    let left=kind==='customer'?pin-pout:pout-pin;const b=[0,0,0,0];let oldest=null,overdue=0;
+    docs.forEach(x=>{const used=Math.max(0,Math.min(left,x.v));left-=used;const due=x.v-used;if(due>0.5){const days=daysBetween(x.d,asOf);b[days<=30?0:days<=60?1:days<=90?2:3]+=due;if(oldest==null)oldest=days;if(days>cd)overdue+=due}});
+    const billed=sum(docs,x=>x.v),settled=kind==='customer'?pin-pout:pout-pin;
+    out.push({p,n:docs.length,billed,settled,bal:billed-settled,b,oldest,overdue});
+  });
+  return out;
+}
+function accTotals(){const c=partyRows('customer'),s=partyRows('supplier');return {recv:sum(c,x=>Math.max(0,x.bal)),overdue:sum(c,x=>x.overdue),overdueParties:c.filter(x=>x.overdue>0).sort((a,b)=>b.overdue-a.overdue).map(x=>x.p.name),pay:sum(s,x=>Math.max(0,x.bal)),adv:sum(s,x=>Math.max(0,-x.bal))}}
+let accTab='customer';
+function vAccounts(){
+  const s=S(),isC=accTab==='customer',t=accTotals();
+  const rows=partyRows(accTab).sort((a,b)=>Math.abs(b.bal)-Math.abs(a.bal));
+  const names=state.parties.filter(p=>p.kind===accTab).map(p=>p.name).sort();
+  const pays=state.payments.filter(x=>isC?x.kind==='receive':x.kind==='pay').slice().reverse().slice(0,40);
+  const head=isC?'<th>Customer</th><th>GSTIN</th><th class="n">Invoiced</th><th class="n">Received</th><th class="n">Balance</th><th class="n">0–30 d</th><th class="n">31–60 d</th><th class="n">61–90 d</th><th class="n">90+ d</th><th></th>'
+    :'<th>Farmer / supplier</th><th class="n">Bills</th><th class="n">Purchased</th><th class="n">Paid</th><th class="n">Balance</th><th>Status</th><th class="n">Oldest unpaid</th><th></th>';
+  const body=rows.map(r=>{const nm=esc(r.p.name);const act=`<button class="btn sm" data-stmt="${nm}">Statement</button> <button class="btn sm" data-pay="${nm}">${isC?'Receive':'Pay'}</button> <button class="btn sm" data-edit="${nm}">Edit</button>`;
+    if(isC)return `<tr data-row="${nm}"><td>${nm}${r.overdue>0?' <span class="tag warn">▲ overdue</span>':''}</td><td class="muted">${esc(r.p.gstin||'Unregistered')}${isInter(r.p.name)?' · IGST':''}</td><td class="n">${inr(r.billed)}</td><td class="n">${inr(r.settled)}</td><td class="n"><b>${inr(r.bal)}</b></td>${r.b.map((v,i)=>`<td class="n">${v?(i>=2?'<span class="tag crit">'+inr(v)+'</span>':inr(v)):'<span class="muted">—</span>'}</td>`).join('')}<td class="n">${act}</td></tr>`;
+    return `<tr data-row="${nm}"><td>${nm}</td><td class="n">${r.n}</td><td class="n">${inr(r.billed)}</td><td class="n">${inr(r.settled)}</td><td class="n"><b>${inr(Math.abs(r.bal))}</b></td><td>${r.bal>0.5?'<span class="tag warn">To pay</span>':r.bal<-0.5?'<span class="tag neutral">Advance given</span>':'<span class="tag good">✓ Settled</span>'}</td><td class="n">${r.oldest!=null?r.oldest+' days':'—'}</td><td class="n">${act}</td></tr>`}).join('');
+  const foot=isC?`<tr><td colspan="2">Total</td><td class="n">${inr(sum(rows,r=>r.billed))}</td><td class="n">${inr(sum(rows,r=>r.settled))}</td><td class="n">${inr(sum(rows,r=>r.bal))}</td>${[0,1,2,3].map(i=>`<td class="n">${inr(sum(rows,r=>r.b[i]))}</td>`).join('')}<td></td></tr>`
+    :`<tr><td colspan="2">Total</td><td class="n">${inr(sum(rows,r=>r.billed))}</td><td class="n">${inr(sum(rows,r=>r.settled))}</td><td class="n">${inr(sum(rows,r=>Math.max(0,r.bal)))} to pay</td><td colspan="3"></td></tr>`;
+  return `<h1>Accounts</h1><p class="sub">Every sale and purchase posts here automatically. Just record money as it comes in or goes out — balances, ageing and statements are worked out for you.</p>
+  <div class="kpis"><div class="card kpi"><div class="l">To collect from customers</div><div class="v">${inrC(t.recv)}</div><div class="d">${t.overdueParties.length} customers overdue</div></div>
+  <div class="card kpi"><div class="l">Overdue (&gt; ${s.creditDays} days)</div><div class="v">${inrC(t.overdue)}</div><div class="d">Follow up first: ${esc(t.overdueParties[0]||'none')}</div></div>
+  <div class="card kpi"><div class="l">To pay farmers / suppliers</div><div class="v">${inrC(t.pay)}</div><div class="d">Unpaid purchase bills</div></div>
+  <div class="card kpi"><div class="l">Advances given</div><div class="v">${inrC(t.adv)}</div><div class="d">To be adjusted against paddy</div></div></div>
+  <div class="sec-h"><div class="seg"><button data-acc="customer" class="${isC?'on':''}">Customers · receivable</button><button data-acc="supplier" class="${!isC?'on':''}">Farmers & suppliers · payable</button></div><button class="btn" id="newParty">+ New party</button></div>
+  <div>
+   <div class="card" id="accBalances"><div class="sec-h"><h2>${isC?'Customer balances & ageing':'Supplier balances'}</h2><button class="btn sm" id="accCsv">Export CSV</button></div><div class="tw"><table id="accTable"><thead><tr>${head}</tr></thead><tbody>${body||'<tr><td colspan="10" class="muted">No parties yet</td></tr>'}</tbody><tfoot>${foot}</tfoot></table></div></div>
+   <div class="grid g2" style="margin-top:16px"><div class="card"><h2>${isC?'Record money received':'Record payment or advance'}</h2><div class="form" style="grid-template-columns:1fr 1fr">
+    <div class="f"><label>Date</label><input type="date" id="pyDate" value="${today()}"></div>
+    <div class="f"><label>${isC?'Customer':'Farmer / supplier'}</label><select id="pyParty">${names.map(n=>`<option value="${esc(n)}">${esc(n)}</option>`).join('')}</select></div>
+    <div class="f"><label>Amount ₹</label><input type="number" id="pyAmt"></div>
+    <div class="f"><label>Mode</label><select id="pyMode"><option>Bank transfer</option><option>UPI</option><option>Cash</option><option>Cheque</option></select></div>
+    <div class="f"><label>Reference</label><input id="pyRef" placeholder="UTR / cheque no / invoice"></div>
+    <div class="f"><label>Note</label><input id="pyNote" placeholder="${isC?'Optional':'e.g. Advance for harvest'}"></div></div>
+    <div class="hint" id="pyBal" style="margin-top:8px"></div>
+    <div class="row" style="margin-top:10px"><button class="btn primary" id="pySave">${isC?'Save receipt':'Save payment'}</button></div></div>
+    <div class="card"><h2>Recent ${isC?'receipts':'payments'}</h2><div class="tw" style="max-height:320px"><table><thead><tr><th>Date</th><th>Party</th><th class="n">Amount</th><th>Mode</th><th></th></tr></thead><tbody>${pays.map(x=>`<tr><td>${fmtDate(x.date)}</td><td title="${esc(x.ref||'')} ${esc(x.note||'')}">${esc(x.party)}</td><td class="n">${inr(x.amount)}</td><td class="muted">${esc(x.mode)}</td><td class="n"><button class="btn sm danger" data-del="payments:${x.id}">✕</button></td></tr>`).join('')||'<tr><td colspan="5" class="muted">None yet</td></tr>'}</tbody></table></div>
+   </div></div>
+  </div>`;
+}
+AFTER.accounts=()=>{
+  const isC=accTab==='customer';
+  document.querySelectorAll('[data-acc]').forEach(b=>b.onclick=()=>{accTab=b.dataset.acc;render()});
+  const balHint=()=>{const n=V('pyParty');if(!n)return;const r=partyRows(accTab).find(x=>x.p.name===n);if(!r)return;const due=isC?r.bal:r.bal;
+    $('#pyBal').innerHTML=isC?(due>0?`Outstanding: <b>${inr(due)}</b>`:`No dues${due<0?' · credit '+inr(-due):''}`):(due>0?`Payable: <b>${inr(due)}</b>`:(due<0?`Advance already given: <b>${inr(-due)}</b>`:'Fully settled'));
+    $('#pyAmt').value=due>0?Math.round(due):''};
+  $('#pyParty').onchange=balHint;balHint();
+  document.querySelectorAll('[data-pay]').forEach(b=>b.onclick=()=>{$('#pyParty').value=b.dataset.pay;balHint();$('#pyAmt').focus();$('#pyAmt').scrollIntoView({behavior:'smooth',block:'center'})});
+  document.querySelectorAll('[data-stmt]').forEach(b=>b.onclick=()=>showDoc('Statement · '+b.dataset.stmt,statementDoc(b.dataset.stmt),'statement-'+b.dataset.stmt.replace(/\W+/g,'-')+'.html'));
+  document.querySelectorAll('[data-edit]').forEach(b=>b.onclick=()=>partyModal(b.dataset.edit));
+  $('#newParty').onclick=()=>partyModal(null);
+  $('#pySave').onclick=()=>{const amt=F('pyAmt');if(!V('pyParty')||amt<=0){toast('Choose a party and enter an amount');return}
+    state.payments.push({id:nextId(isC?'RC':'PY',state.payments),date:V('pyDate')||today(),party:V('pyParty'),kind:isC?'receive':'pay',amount:amt,mode:V('pyMode'),ref:V('pyRef'),note:V('pyNote')});
+    state.payments.sort((a,b)=>a.date.localeCompare(b.date));changed((isC?'Receipt':'Payment')+' of '+inr(amt)+' saved');render()};
+  $('#accCsv').onclick=()=>exportTable($('#accTable'),(isC?'receivables':'payables')+'-'+today()+'.csv');
+  bindDeletes();
+};
+function partyModal(name){
+  const p=name?partyOf(name):{name:'',kind:accTab,gstin:'',stateCode:S().firm.stateCode,phone:'',address:''};
+  $('#modal').innerHTML=`<div class="modal"><div class="card"><div class="sec-h"><h2>${name?'Edit · '+esc(name):'New party'}</h2><button class="btn sm" id="mdClose">Close</button></div><div class="form" style="grid-template-columns:1fr 1fr">
+   <div class="f" style="grid-column:span 2"><label>Name</label><input id="ptName" value="${esc(p.name)}" ${name?'readonly':''}></div>
+   <div class="f"><label>Type</label><select id="ptKind"><option value="customer" ${p.kind==='customer'?'selected':''}>Customer</option><option value="supplier" ${p.kind==='supplier'?'selected':''}>Farmer / supplier</option></select></div>
+   <div class="f"><label>GSTIN</label><input id="ptGstin" value="${esc(p.gstin)}" maxlength="15" placeholder="Blank if unregistered"></div>
+   <div class="f"><label>State (place of supply)</label><select id="ptState">${stateOpts(p.stateCode)}</select></div>
+   <div class="f"><label>Phone</label><input id="ptPhone" value="${esc(p.phone)}"></div>
+   <div class="f" style="grid-column:span 2"><label>Address</label><input id="ptAddr" value="${esc(p.address)}"></div></div>
+   <div id="ptErr" style="color:var(--crit);font-size:12.5px;margin-top:8px"></div>
+   <p class="muted" style="font-size:12px">State decides CGST+SGST vs IGST on new invoices. Invoices already issued are not changed.</p>
+   <div class="row"><button class="btn primary" id="ptSave">Save party</button></div></div></div>`;
+  $('#mdClose').onclick=closeModal;
+  $('#ptGstin').oninput=e=>{e.target.value=e.target.value.toUpperCase();const c=e.target.value.slice(0,2);if(STATES[c])$('#ptState').value=c};
+  $('#ptSave').onclick=()=>{const nm=V('ptName').trim(),g=V('ptGstin').trim();
+    if(!nm){$('#ptErr').textContent='Enter a name';return}
+    if(!name&&partyOf(nm)){$('#ptErr').textContent='A party with this name already exists';return}
+    if(g&&!/^[0-9]{2}[A-Z0-9]{13}$/.test(g)){$('#ptErr').textContent='GSTIN must be 15 characters starting with the 2-digit state code';return}
+    const o=name?partyOf(name):{name:nm};Object.assign(o,{kind:V('ptKind'),gstin:g,stateCode:V('ptState'),phone:V('ptPhone').trim(),address:V('ptAddr').trim()});
+    if(!name)state.parties.push(o);closeModal();changed('Party saved');render()};
+}
+
+/* ---------- printable documents ---------- */
+function docShell(title,body){return '<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1"><title>'+esc(title)+'</title><style>body{font:13px/1.45 system-ui,"Segoe UI",Roboto,sans-serif;color:#111;margin:0;padding:28px;background:#fff}.doc{max-width:780px;margin:0 auto}h1{font-size:19px;margin:0}table{width:100%;border-collapse:collapse;margin:12px 0}th,td{border:1px solid #bbb;padding:6px 8px;text-align:left;vertical-align:top}th{background:#f1f1f1;font-size:12px}.n{text-align:right;white-space:nowrap}.hd{display:flex;justify-content:space-between;gap:20px;border-bottom:2px solid #111;padding-bottom:10px;margin-bottom:10px}.muted{color:#555}.tt{font-size:15px;font-weight:700;text-align:center;letter-spacing:.06em;margin:6px 0 12px}.g2{display:grid;grid-template-columns:1fr 1fr;gap:12px}.box{border:1px solid #bbb;padding:8px 10px}.sig{margin-top:36px;text-align:right}.pb{margin:0 0 14px;text-align:right}.pb button{font:inherit;padding:7px 14px;border:1px solid #1c5cab;background:#1c5cab;color:#fff;border-radius:6px;cursor:pointer}@media print{.pb{display:none}body{padding:0}}</style></head><body><div class="doc"><div class="pb"><button onclick="window.print()">Print / Save as PDF</button></div>'+body+'</div></body></html>'}
+function firmHead(){const s=S(),f=s.firm;return `<div class="hd"><div><h1>${esc(s.millName)}</h1><div class="muted">${esc(f.address)}</div><div class="muted">${f.phone?'Ph: '+esc(f.phone)+' · ':''}State: ${esc(STATES[f.stateCode]||'')} (${esc(f.stateCode)})</div></div><div style="text-align:right"><b>GSTIN</b><br>${esc(f.gstin||'—')}</div></div>`}
+function invoiceDoc(x){
+  const s=S(),p=partyOf(x.customer)||{},t=taxParts(x),sc=p.stateCode||s.firm.stateCode;
+  const bags=x.item.startsWith('rice:')&&x.kg%s.riceBagKg===0?x.kg/s.riceBagKg:null;
+  const tax=x.inter?`<tr><td>IGST @ ${x.gst}%</td><td class="n">${num(t.igst,2)}</td></tr>`:`<tr><td>CGST @ ${x.gst/2}%</td><td class="n">${num(t.cgst,2)}</td></tr><tr><td>SGST @ ${x.gst/2}%</td><td class="n">${num(t.sgst,2)}</td></tr>`;
+  return docShell('Invoice '+x.invoiceNo,firmHead()+`<div class="tt">TAX INVOICE</div>
+  <div class="g2"><div class="box"><b>Bill to</b><br>${esc(x.customer)}${p.address?'<br>'+esc(p.address):''}<br>GSTIN: ${esc(p.gstin||'Unregistered')}<br>State: ${esc(STATES[sc]||'')} (${esc(sc)})</div>
+  <div class="box">Invoice no: <b>${esc(x.invoiceNo)}</b><br>Date: ${fmtLong(x.date)}<br>Place of supply: ${esc(STATES[sc]||'')} (${esc(sc)})<br>Reverse charge: No</div></div>
+  <table><thead><tr><th>#</th><th>Description of goods</th><th>HSN</th><th class="n">Quantity</th><th class="n">Rate ₹/qtl</th><th class="n">Taxable value ₹</th></tr></thead><tbody><tr><td>1</td><td>${esc(itemName(x.item))}${bags?'<br><span class="muted">'+num(bags)+' bags × '+s.riceBagKg+' kg</span>':''}</td><td>${esc(hsnOf(x.item))}</td><td class="n">${num(x.kg)} kg<br><span class="muted">${qtl(x.kg)} qtl</span></td><td class="n">${num(x.rate,2)}</td><td class="n">${num(x.amount,2)}</td></tr></tbody></table>
+  <table style="width:50%;margin-left:auto"><tbody><tr><td>Taxable value</td><td class="n">${num(x.amount,2)}</td></tr>${tax}<tr><th>Invoice total</th><th class="n">₹ ${num(x.total,2)}</th></tr></tbody></table>
+  <p><b>Amount in words:</b> Rupees ${inWords(x.total)} only</p>${s.firm.bank?'<p>Bank: '+esc(s.firm.bank)+'</p>':''}
+  <p class="muted" style="font-size:11.5px">Certified that the particulars given above are true and correct. Subject to local jurisdiction.</p><div class="sig">For ${esc(s.millName)}<br><br><br>Authorised signatory</div>`);
+}
+function slipDoc(p){
+  const s=S(),c=calcPurchase(s,{gross:p.grossKg,bags:p.bags,moist:p.moisture,rate:p.rate,tare:p.tarePerBag,fm:p.fm}),pt=partyOf(p.supplier)||{};
+  const row=(l,v,b)=>`<tr><td>${b?'<b>'+l+'</b>':l}</td><td class="n">${b?'<b>'+v+'</b>':v}</td></tr>`;
+  return docShell('Purchase bill '+p.billNo,firmHead()+`<div class="tt">WEIGHMENT SLIP &amp; PADDY PURCHASE BILL</div>
+  <div class="g2"><div class="box"><b>Farmer / supplier</b><br>${esc(p.supplier)}${pt.address?'<br>'+esc(pt.address):''}${pt.phone?'<br>Ph: '+esc(pt.phone):''}</div><div class="box">Bill no: <b>${esc(p.billNo)}</b><br>Date: ${fmtLong(p.date)}<br>Variety: ${esc(p.variety)}</div></div>
+  <table><tbody>${row('Gross weight',num(p.grossKg)+' kg')}${row('Number of bags',num(p.bags))}${row('Less: tare ('+num(p.bags)+' × '+p.tarePerBag+' kg)',num(c.tareKg,1)+' kg')}${row('Moisture '+p.moisture+'% (standard '+s.stdMoisture+'%) — deduction',num(c.moistKg,1)+' kg')}${(p.fm||0)?row('Foreign matter '+p.fm+'% — deduction',num(c.fmKg,1)+' kg'):''}${row('Net weight',num(p.netKg)+' kg ('+qtl(p.netKg)+' qtl)',1)}${row('Rate',inr(p.rate)+' per qtl')}${row('Amount payable',inr(p.amount),1)}</tbody></table>
+  <p><b>Amount in words:</b> Rupees ${inWords(p.amount)} only</p><div class="g2" style="margin-top:44px"><div>Farmer / supplier signature</div><div style="text-align:right">For ${esc(s.millName)}<br><br>Weighbridge operator</div></div>`);
+}
+function statementDoc(name){
+  const rows=ledgerFor(name),p=partyOf(name)||{},last=rows.length?rows[rows.length-1].bal:0,isC=p.kind!=='supplier';
+  const bl=v=>inr(Math.abs(v))+(v>0.5?' Dr':v<-0.5?' Cr':'');
+  return docShell('Statement '+name,firmHead()+`<div class="tt">STATEMENT OF ACCOUNT</div><div class="g2"><div class="box"><b>${esc(name)}</b>${p.address?'<br>'+esc(p.address):''}${p.gstin?'<br>GSTIN: '+esc(p.gstin):''}</div><div class="box">As on: ${fmtLong(today())}<br>Entries: ${rows.length}</div></div>
+  <table><thead><tr><th>Date</th><th>Ref</th><th>Particulars</th><th class="n">Debit ₹</th><th class="n">Credit ₹</th><th class="n">Balance</th></tr></thead><tbody>${rows.map(r=>`<tr><td>${fmtLong(r.date)}</td><td>${esc(r.ref)}</td><td>${esc(r.desc)}</td><td class="n">${r.dr?num(r.dr,2):''}</td><td class="n">${r.cr?num(r.cr,2):''}</td><td class="n">${bl(r.bal)}</td></tr>`).join('')}</tbody></table>
+  <p style="font-size:15px"><b>${last>0.5?(isC?'Amount due from you':'Advance with you'):last<-0.5?(isC?'Credit balance in your favour':'Amount payable to you'):'Account settled'}: ${inr(Math.abs(last))}</b></p><p class="muted">Please report any difference within 7 days.</p>`);
+}
+let docUrl=null;
+function showDoc(title,html,filename){
+  try{if(docUrl)URL.revokeObjectURL(docUrl);docUrl=URL.createObjectURL(new Blob([html],{type:'text/html'}))}catch(e){docUrl=null}
+  $('#modal').innerHTML=`<div class="modal"><div class="card wide"><div class="sec-h"><h2>${esc(title)}</h2><div class="row">${BUILD==='pwa'?'<button class="btn primary sm" id="docPrint">Print / Save as PDF</button>':''}${downloadsApi||BUILD==='pwa'?'<button class="btn sm" id="docDl">Download file</button>':''}${docUrl?`<a class="btn sm" href="${docUrl}" target="_blank" rel="noopener">Open in new tab</a>`:''}<button class="btn sm" id="mdClose">Close</button></div></div><iframe sandbox="" id="docFrame" title="${esc(title)}"></iframe><p class="muted" style="font-size:12px;margin:8px 0 0">Download the file, open it and press “Print / Save as PDF” — the PDF can be shared on WhatsApp or email.</p></div></div>`;
+  $('#docFrame').srcdoc=html;$('#mdClose').onclick=closeModal;const pr=$('#docPrint');if(pr)pr.onclick=()=>{const w=docUrl&&window.open(docUrl,'_blank');if(!w)toast('Allow pop-ups to print, or use Download file')};const d=$('#docDl');if(d)d.onclick=()=>exportFile(filename,html,'text/html');
+}
+
+/* ---------- GST & Tally ---------- */
+let gstMonth=null;
+function gstRows(){return state.sales.filter(x=>ym(x.date)===gstMonth).map(x=>({x,p:partyOf(x.customer)||{},t:taxParts(x)}))}
+function vGst(){
+  const ms=monthsAll();if(!gstMonth||!ms.includes(gstMonth))gstMonth=ym(lastDate());
+  const rows=gstRows(),b2b=rows.filter(r=>r.p.gstin),b2c=rows.filter(r=>!r.p.gstin);
+  const T=k=>sum(rows,r=>r.t[k]);
+  const hs={};rows.forEach(r=>{const h=hsnOf(r.x.item),k=h+'|'+r.x.gst;const o=hs[k]||(hs[k]={hsn:h,rate:r.x.gst,desc:new Set(),kg:0,tx:0,c:0,s:0,i:0});o.desc.add(itemCat(r.x.item)==='Rice'?'Rice':itemName(r.x.item));o.kg+=r.x.kg;o.tx+=r.x.amount;o.c+=r.t.cgst;o.s+=r.t.sgst;o.i+=r.t.igst});
+  const H=Object.values(hs).sort((a,b)=>b.tx-a.tx);
+  const inM=x=>ym(x.date)===gstMonth;
+  const cnt={sales:state.sales.filter(inM).length,purchases:state.purchases.filter(inM).length,pay:state.payments.filter(x=>inM(x)&&x.kind==='pay').length,recv:state.payments.filter(x=>inM(x)&&x.kind==='receive').length};
+  const reg=[...b2b,...b2c];
+  return `<div class="sec-h"><div><h1>GST & Tally</h1><p class="sub" style="margin:0">Monthly GST working for your accountant, and a Tally import file so no entry is typed twice.</p></div><div class="row"><span class="muted">Month</span><select id="gMonth" class="btn sm">${ms.map(k=>`<option value="${k}" ${k===gstMonth?'selected':''}>${monthName(k)}</option>`).join('')}</select></div></div>
+  <div class="kpis" style="margin-top:14px"><div class="card kpi"><div class="l">Taxable value</div><div class="v">${inrC(sum(rows,r=>r.x.amount))}</div><div class="d">${rows.length} invoices</div></div>
+  <div class="card kpi"><div class="l">CGST</div><div class="v">${inr(T('cgst'))}</div><div class="d">Within state</div></div><div class="card kpi"><div class="l">SGST</div><div class="v">${inr(T('sgst'))}</div><div class="d">Within state</div></div>
+  <div class="card kpi"><div class="l">IGST</div><div class="v">${inr(T('igst'))}</div><div class="d">Inter-state sales</div></div>
+  <div class="card kpi"><div class="l">B2B (registered)</div><div class="v">${b2b.length}</div><div class="d">${inrC(sum(b2b,r=>r.x.amount))} taxable</div></div>
+  <div class="card kpi"><div class="l">B2C (unregistered)</div><div class="v">${b2c.length}</div><div class="d">${inrC(sum(b2c,r=>r.x.amount))} taxable</div></div></div>
+  <div class="grid g2">
+   <div class="card"><div class="sec-h"><h2>HSN-wise summary</h2><button class="btn sm" id="hsnCsv">Export CSV</button></div><div class="tw"><table id="hsnTable"><thead><tr><th>HSN</th><th>Description</th><th class="n">Qty (kg)</th><th class="n">Rate</th><th class="n">Taxable</th><th class="n">CGST</th><th class="n">SGST</th><th class="n">IGST</th></tr></thead><tbody>${H.map(h=>`<tr><td>${esc(h.hsn)}</td><td>${esc([...h.desc].join(', '))}</td><td class="n">${num(h.kg)}</td><td class="n">${h.rate}%</td><td class="n">${inr(h.tx)}</td><td class="n">${inr(h.c,2)}</td><td class="n">${inr(h.s,2)}</td><td class="n">${inr(h.i,2)}</td></tr>`).join('')||'<tr><td colspan="8" class="muted">No sales this month</td></tr>'}</tbody></table></div>
+   <p class="muted" style="font-size:12px;margin:8px 0 0">Paddy purchases from farmers are recorded without GST. Confirm rates and HSN codes with your accountant before filing.</p></div>
+   <div class="card"><h2>Tally export</h2><p class="muted" style="margin:-4px 0 12px;font-size:13px">Downloads a Tally XML file of this month's vouchers (accounting-invoice mode). In Tally: Gateway → Import → Vouchers.</p>
+    <div class="form" style="grid-template-columns:1fr"><div class="f"><label>Tally company name (exactly as in Tally)</label><input id="tCo" value="${esc(S().millName)}"></div></div>
+    <div class="row" style="margin:12px 0;gap:16px"><label><input type="checkbox" id="tS" checked> Sales (${cnt.sales})</label><label><input type="checkbox" id="tP" checked> Purchases (${cnt.purchases})</label><label><input type="checkbox" id="tY" checked> Payments (${cnt.pay})</label><label><input type="checkbox" id="tR" checked> Receipts (${cnt.recv})</label></div>
+    <div class="row"><button class="btn primary" id="tDl">Download Tally XML</button><button class="btn" id="tCopy">Copy XML</button></div>
+    <p class="muted" style="font-size:12px;margin:12px 0 0">Create these ledgers in Tally first (exact names): <b>Sales - Rice</b>, <b>Sales - By-products</b>, <b>Paddy Purchase</b>, <b>CGST Output</b>, <b>SGST Output</b>, <b>IGST Output</b>, <b>Cash</b>, <b>Bank</b>, and one ledger per party name. Test the first import on a backup company.</p></div>
+  </div>
+  <div class="card" style="margin-top:16px"><div class="sec-h"><h2>Invoice register · ${monthName(gstMonth)}</h2><button class="btn sm" id="regCsv">Export CSV (GSTR-1 working)</button></div><div class="tw"><table id="regTable"><thead><tr><th>Type</th><th>Invoice</th><th>Date</th><th>Customer</th><th>GSTIN</th><th>Place of supply</th><th>HSN</th><th class="n">Taxable</th><th class="n">Rate</th><th class="n">CGST</th><th class="n">SGST</th><th class="n">IGST</th><th class="n">Total</th></tr></thead><tbody>${reg.map(r=>{const sc=r.p.stateCode||S().firm.stateCode;return `<tr><td>${r.p.gstin?'<span class="tag neutral">B2B</span>':'<span class="tag neutral">B2C</span>'}</td><td>${esc(r.x.invoiceNo)}</td><td>${fmtLong(r.x.date)}</td><td>${esc(r.x.customer)}</td><td>${esc(r.p.gstin||'')}</td><td>${esc(sc)}-${esc(STATES[sc]||'')}</td><td>${esc(hsnOf(r.x.item))}</td><td class="n">${num(r.x.amount,2)}</td><td class="n">${r.x.gst}%</td><td class="n">${num(r.t.cgst,2)}</td><td class="n">${num(r.t.sgst,2)}</td><td class="n">${num(r.t.igst,2)}</td><td class="n">${num(r.x.total,2)}</td></tr>`}).join('')||'<tr><td colspan="13" class="muted">No invoices</td></tr>'}</tbody></table></div>
+  <p class="muted" style="font-size:12px;margin:8px 0 0">E-invoice (IRN/QR) and e-way bill generation need a registered GST Suvidha Provider connection, which requires a hosted version of this app. This register has the data your accountant or GSP needs.</p></div>`;
+}
+function tallyXML(types,company){
+  const inM=x=>ym(x.date)===gstMonth,dd=x=>x.replace(/-/g,''),a=v=>(Math.round(v*100)/100).toFixed(2);
+  const L=(n,amt,dr)=>`<ALLLEDGERENTRIES.LIST><LEDGERNAME>${esc(n)}</LEDGERNAME><ISDEEMEDPOSITIVE>${dr?'Yes':'No'}</ISDEEMEDPOSITIVE><AMOUNT>${a(amt)}</AMOUNT></ALLLEDGERENTRIES.LIST>`;
+  const Vc=(type,date,no,party,narr,e)=>` <TALLYMESSAGE xmlns:UDF="TallyUDF"><VOUCHER VCHTYPE="${type}" ACTION="Create"><DATE>${dd(date)}</DATE><VOUCHERTYPENAME>${type}</VOUCHERTYPENAME><VOUCHERNUMBER>${esc(no)}</VOUCHERNUMBER><PARTYLEDGERNAME>${esc(party)}</PARTYLEDGERNAME><NARRATION>${esc(narr)}</NARRATION>${e.join('')}</VOUCHER></TALLYMESSAGE>`;
+  const cash=m=>m==='Cash'?'Cash':'Bank',out=[];
+  if(types.s)state.sales.filter(inM).forEach(x=>{const t=taxParts(x),e=[L(x.customer,-x.total,true),L(x.item.startsWith('rice:')?'Sales - Rice':'Sales - By-products',x.amount,false)];if(t.igst)e.push(L('IGST Output',t.igst,false));if(t.cgst||t.sgst)e.push(L('CGST Output',t.cgst,false),L('SGST Output',t.sgst,false));out.push(Vc('Sales',x.date,x.invoiceNo,x.customer,itemName(x.item).replace(' · ',' - ')+' '+x.kg+' kg @ Rs '+x.rate+'/qtl',e))});
+  if(types.p)state.purchases.filter(inM).forEach(p=>out.push(Vc('Purchase',p.date,p.billNo,p.supplier,'Paddy '+p.variety+' '+p.netKg+' kg net @ Rs '+p.rate+'/qtl, moisture '+p.moisture+'%',[L('Paddy Purchase',-p.amount,true),L(p.supplier,p.amount,false)])));
+  if(types.y)state.payments.filter(x=>inM(x)&&x.kind==='pay').forEach(x=>out.push(Vc('Payment',x.date,x.id,x.party,(x.ref||'')+' '+(x.note||''),[L(x.party,-x.amount,true),L(cash(x.mode),x.amount,false)])));
+  if(types.r)state.payments.filter(x=>inM(x)&&x.kind==='receive').forEach(x=>out.push(Vc('Receipt',x.date,x.id,x.party,(x.ref||'')+' '+(x.note||''),[L(cash(x.mode),-x.amount,true),L(x.party,x.amount,false)])));
+  return {n:out.length,xml:'<ENVELOPE>\n<HEADER><TALLYREQUEST>Import Data</TALLYREQUEST></HEADER>\n<BODY><IMPORTDATA><REQUESTDESC><REPORTNAME>Vouchers</REPORTNAME><STATICVARIABLES><SVCURRENTCOMPANY>'+esc(company)+'</SVCURRENTCOMPANY></STATICVARIABLES></REQUESTDESC>\n<REQUESTDATA>\n'+out.join('\n')+'\n</REQUESTDATA></IMPORTDATA></BODY>\n</ENVELOPE>\n'};
+}
+AFTER.gst=()=>{
+  $('#gMonth').onchange=e=>{gstMonth=e.target.value;render()};
+  const build=()=>tallyXML({s:$('#tS').checked,p:$('#tP').checked,y:$('#tY').checked,r:$('#tR').checked},V('tCo')||S().millName);
+  $('#tDl').onclick=()=>{const r=build();if(!r.n){toast('Nothing selected for this month');return}exportFile('tally-'+gstMonth+'.xml',r.xml,'application/xml')};
+  $('#tCopy').onclick=()=>{const r=build();navigator.clipboard.writeText(r.xml).then(()=>toast(r.n+' vouchers copied'),()=>showText('Tally XML',r.xml))};
+  $('#hsnCsv').onclick=()=>exportTable($('#hsnTable'),'hsn-summary-'+gstMonth+'.csv');
+  $('#regCsv').onclick=()=>exportTable($('#regTable'),'invoice-register-'+gstMonth+'.csv');
+};
+
+/* ---------- CMR (custom milling for government agencies) ---------- */
+function cmrSummary(){
+  const s=S(),m={},get=(a,se)=>m[a+'|'+se]||(m[a+'|'+se]={agency:a,season:se,paddy:0,due:0,delivered:0,lots:0,dels:0});
+  state.cmr.lots.forEach(l=>{const o=get(l.agency,l.season);o.paddy+=l.kg;o.due+=l.kg*(l.type==='boiled'?s.cmr.otBoiled:s.cmr.otRaw)/100;o.lots++});
+  state.cmr.deliveries.forEach(d=>{const o=get(d.agency,d.season);o.delivered+=d.kg;o.dels++});
+  return Object.values(m).map(o=>{const ratio=o.paddy?o.due/o.paddy:s.cmr.otRaw/100;return {...o,balance:o.due-o.delivered,donePct:o.due?o.delivered/o.due*100:0,paddyMilled:ratio?o.delivered/ratio:0,charges:(ratio?o.delivered/ratio:0)/100*s.cmr.chargePerQtl,paddyLeft:o.paddy-(ratio?o.delivered/ratio:0)}});
+}
+function vCmr(){
+  const s=S(),cs=cmrSummary(),ags=[...new Set([...state.cmr.lots,...state.cmr.deliveries].map(x=>x.agency))],seas=[...new Set([...state.cmr.lots,...state.cmr.deliveries].map(x=>x.season))];
+  const inp=(path,l,v,h)=>`<div class="f"><label>${l}</label><input type="number" step="0.1" data-path="${path}" value="${v}">${h?'<div class="hint">'+h+'</div>':''}</div>`;
+  return `<h1>Government custom milling (CMR)</h1><p class="sub">Paddy received from a procurement agency belongs to the agency, so it's kept separate from your own stock. CMR due is worked out at the out-turn ratio below.</p>
+  <div class="kpis"><div class="card kpi"><div class="l">Agency paddy received</div><div class="v">${qtl(sum(cs,x=>x.paddy))} qtl</div><div class="d">${state.cmr.lots.length} lots</div></div>
+  <div class="card kpi"><div class="l">CMR rice due</div><div class="v">${qtl(sum(cs,x=>x.due))} qtl</div><div class="d">At ${s.cmr.otRaw}% raw / ${s.cmr.otBoiled}% boiled</div></div>
+  <div class="card kpi"><div class="l">CMR delivered</div><div class="v">${qtl(sum(cs,x=>x.delivered))} qtl</div><div class="d">${state.cmr.deliveries.length} deliveries</div></div>
+  <div class="card kpi"><div class="l">Balance to deliver</div><div class="v">${qtl(sum(cs,x=>x.balance))} qtl</div><div class="d">≈ ${num(sum(cs,x=>x.balance)/s.riceBagKg)} bags of ${s.riceBagKg} kg</div></div>
+  <div class="card kpi"><div class="l">Agency paddy still in godown</div><div class="v">${qtl(sum(cs,x=>x.paddyLeft))} qtl</div><div class="d">Not counted in your stock</div></div>
+  <div class="card kpi"><div class="l">Milling charges earned</div><div class="v">${inrC(sum(cs,x=>x.charges))}</div><div class="d">₹${s.cmr.chargePerQtl}/qtl on paddy milled</div></div></div>
+  <div class="card" id="cmrProgress"><h2>Delivery progress by agency & season</h2><div class="tw"><table><thead><tr><th>Agency</th><th>Season</th><th class="n">Paddy received (qtl)</th><th class="n">CMR due (qtl)</th><th class="n">Delivered (qtl)</th><th class="n">Balance (qtl)</th><th style="width:22%">Progress</th></tr></thead><tbody>${cs.map(x=>`<tr><td>${esc(x.agency)}</td><td>${esc(x.season)}</td><td class="n">${qtl(x.paddy)}</td><td class="n">${qtl(x.due)}</td><td class="n">${qtl(x.delivered)}</td><td class="n"><b>${qtl(x.balance)}</b></td><td><div style="display:flex;align-items:center;gap:8px"><div style="flex:1;height:8px;background:var(--surface-2);border-radius:4px;overflow:hidden"><div style="height:100%;width:${Math.min(100,x.donePct)}%;background:var(--s1)"></div></div><span style="font-size:12px">${pct(x.donePct,0)}</span></div></td></tr>`).join('')||'<tr><td colspan="7" class="muted">No CMR lots yet</td></tr>'}</tbody></table></div></div>
+  <datalist id="agList">${ags.map(a=>`<option value="${esc(a)}">`).join('')}</datalist><datalist id="seList">${seas.map(a=>`<option value="${esc(a)}">`).join('')}</datalist>
+  <div class="grid g2" style="margin-top:16px">
+   <div class="card"><h2>Paddy received from agency</h2><div class="form">
+    <div class="f"><label>Date</label><input type="date" id="clDate" value="${today()}"></div><div class="f" style="grid-column:span 2"><label>Agency</label><input id="clAg" list="agList" value="${esc(ags[0]||'')}"></div>
+    <div class="f"><label>Season</label><input id="clSe" list="seList" value="${esc(seas[0]||'Kharif 2026-27')}"></div><div class="f"><label>Type</label><select id="clType"><option value="raw">Raw (${s.cmr.otRaw}%)</option><option value="boiled">Boiled (${s.cmr.otBoiled}%)</option></select></div>
+    <div class="f"><label>Paddy (kg)</label><input type="number" id="clKg"></div><div class="f"><label>Truck / lot ref</label><input id="clRef"></div></div>
+    <div class="hint" id="clHint" style="margin-top:8px"></div><div class="row" style="margin-top:10px"><button class="btn primary" id="clSave">Save lot</button></div>
+    <div class="tw" style="margin-top:14px;max-height:260px"><table><thead><tr><th>Date</th><th>Ref</th><th>Type</th><th class="n">Paddy kg</th><th class="n">CMR due kg</th><th></th></tr></thead><tbody>${state.cmr.lots.slice().reverse().map(l=>`<tr><td>${fmtDate(l.date)}</td><td>${esc(l.ref||'')}</td><td>${l.type}</td><td class="n">${num(l.kg)}</td><td class="n">${num(l.kg*(l.type==='boiled'?s.cmr.otBoiled:s.cmr.otRaw)/100)}</td><td class="n"><button class="btn sm danger" data-cdel="lots:${l.id}">✕</button></td></tr>`).join('')}</tbody></table></div></div>
+   <div class="card"><h2>CMR rice delivered</h2><div class="form">
+    <div class="f"><label>Date</label><input type="date" id="cdDate" value="${today()}"></div><div class="f" style="grid-column:span 2"><label>Agency</label><input id="cdAg" list="agList" value="${esc(ags[0]||'')}"></div>
+    <div class="f"><label>Season</label><input id="cdSe" list="seList" value="${esc(seas[0]||'Kharif 2026-27')}"></div><div class="f"><label>Rice (kg)</label><input type="number" id="cdKg"></div><div class="f"><label>Acceptance note no.</label><input id="cdRef"></div></div>
+    <div class="hint" id="cdHint" style="margin-top:8px"></div><div class="row" style="margin-top:10px"><button class="btn primary" id="cdSave">Save delivery</button></div>
+    <div class="tw" style="margin-top:14px;max-height:260px"><table><thead><tr><th>Date</th><th>Ack no.</th><th>Season</th><th class="n">Rice kg</th><th></th></tr></thead><tbody>${state.cmr.deliveries.slice().reverse().map(d=>`<tr><td>${fmtDate(d.date)}</td><td>${esc(d.ref||'')}</td><td>${esc(d.season)}</td><td class="n">${num(d.kg)}</td><td class="n"><button class="btn sm danger" data-cdel="deliveries:${d.id}">✕</button></td></tr>`).join('')}</tbody></table></div></div>
+  </div>
+  <div class="card" style="margin-top:16px"><h2>CMR terms</h2><div class="form">${inp('cmr.otRaw','Out-turn ratio · raw rice %',s.cmr.otRaw)}${inp('cmr.otBoiled','Out-turn ratio · boiled rice %',s.cmr.otBoiled)}${inp('cmr.chargePerQtl','Milling charge ₹/qtl paddy',s.cmr.chargePerQtl)}</div><p class="muted" style="font-size:12px;margin:10px 0 0">Out-turn ratios and milling charges vary by state and season — set them to match your agreement with the agency.</p></div>`;
+}
+AFTER.cmr=()=>{
+  const s=S();
+  const lh=()=>{const kg=F('clKg');$('#clHint').textContent=kg?'CMR due on this lot: '+num(kg*(V('clType')==='boiled'?s.cmr.otBoiled:s.cmr.otRaw)/100)+' kg rice':''};
+  ['clKg','clType'].forEach(i=>$('#'+i).addEventListener('input',lh));
+  const dh=()=>{const r=cmrSummary().find(x=>x.agency===V('cdAg')&&x.season===V('cdSe'));$('#cdHint').textContent=r?'Balance due for this agency & season: '+num(r.balance)+' kg':''};
+  ['cdAg','cdSe','cdKg'].forEach(i=>$('#'+i).addEventListener('input',dh));dh();
+  $('#clSave').onclick=()=>{if(!V('clAg').trim()||F('clKg')<=0){toast('Enter agency and paddy weight');return}state.cmr.lots.push({id:nextId('CL',state.cmr.lots),date:V('clDate')||today(),agency:V('clAg').trim(),season:V('clSe').trim(),type:V('clType'),kg:F('clKg'),ref:V('clRef')});state.cmr.lots.sort((a,b)=>a.date.localeCompare(b.date));changed('CMR paddy lot saved');render()};
+  $('#cdSave').onclick=()=>{if(!V('cdAg').trim()||F('cdKg')<=0){toast('Enter agency and rice weight');return}state.cmr.deliveries.push({id:nextId('CD',state.cmr.deliveries),date:V('cdDate')||today(),agency:V('cdAg').trim(),season:V('cdSe').trim(),kg:F('cdKg'),ref:V('cdRef')});state.cmr.deliveries.sort((a,b)=>a.date.localeCompare(b.date));changed('CMR delivery saved');render()};
+  document.querySelectorAll('[data-cdel]').forEach(b=>b.onclick=()=>confirmBtn(b,()=>{const [c,id]=b.dataset.cdel.split(':');state.cmr[c]=state.cmr[c].filter(x=>x.id!==id);changed('Entry deleted');render()}));
+  bindPaths();
+};
+
+/* ---------- device-safe numbering ---------- */
+function reEsc(x){return x.replace(/[.*+?^${}()|[\]\\]/g,'\\$&')}
+function dev(){if(BUILD!=='pwa')return '';if(!cfg.device){if(!serverBase())return '';cfg.device=String.fromCharCode(65+Math.floor(Math.random()*26))+String.fromCharCode(65+Math.floor(Math.random()*26));KV.set('cfg',cfg)}return cfg.device}
+function nextId(prefix,list){const pre=prefix+(dev()?dev()+'-':''),re=new RegExp('^'+reEsc(pre)+'(\\d+)$');let m=0;list.forEach(r=>{const x=re.exec(r.id||'');if(x)m=Math.max(m,+x[1])});return pre+(m+1)}
+function nextNo(prefix,list,field){const pre=prefix+(dev()?dev()+'-':''),re=new RegExp('^'+reEsc(pre)+'(\\d+)$');let m=0;list.forEach(r=>{const x=re.exec(r[field]||'');if(x)m=Math.max(m,+x[1])});return pre+String(m+1).padStart(4,'0')}
+
+/* ---------- offline storage (app package) ---------- */
+const KV={db:null,
+  open(){return this.db||(this.db=new Promise((res,rej)=>{const t=setTimeout(()=>rej(new Error('IndexedDB timeout')),3000);try{const r=indexedDB.open('ricemill',1);r.onupgradeneeded=()=>r.result.createObjectStore('kv');r.onsuccess=()=>{clearTimeout(t);res(r.result)};r.onerror=()=>{clearTimeout(t);rej(r.error)};r.onblocked=()=>{clearTimeout(t);rej(new Error('blocked'))}}catch(e){clearTimeout(t);rej(e)}}))},
+  async get(k){try{const d=await this.open();return await new Promise((res,rej)=>{const t=d.transaction('kv').objectStore('kv').get(k);t.onsuccess=()=>res(t.result);t.onerror=()=>rej(t.error)})}catch(e){try{return JSON.parse(localStorage.getItem('rm-'+k)||'null')}catch(_){return null}}},
+  async set(k,v){try{const d=await this.open();await new Promise((res,rej)=>{const tx=d.transaction('kv','readwrite');tx.objectStore('kv').put(v,k);tx.oncomplete=res;tx.onerror=()=>rej(tx.error)})}catch(e){try{localStorage.setItem('rm-'+k,JSON.stringify(v))}catch(_){}}}
+};
+let cfg={url:'',key:'',device:''},snap={},syncMeta={cursor:0,pulled:false,last:0,err:''},syncing=false,pendingRemote=false,installEvt=null,persistT=null,syncT=null;
+function schedulePersist(){clearTimeout(persistT);persistT=setTimeout(persistNow,250)}
+async function persistNow(){clearTimeout(persistT);if(BUILD!=='pwa')return;await KV.set('state',state);await KV.set('snap',snap);await KV.set('sync',syncMeta)}
+function scheduleSync(){clearTimeout(syncT);syncT=setTimeout(()=>syncNow(),1500)}
+
+/* ---------- sync engine: each record is synced on its own, so devices merge cleanly ---------- */
+const COLLS=['purchases','batches','sales','adjustments','payments','parties','cmr.lots','cmr.deliveries'];
+function getColl(st,c){return c.startsWith('cmr.')?st.cmr[c.slice(4)]:st[c]}
+function keyOf(c,r){return c==='parties'?r.name:r.id}
+function currentMap(){const m=new Map();COLLS.forEach(c=>(getColl(state,c)||[]).forEach(r=>m.set(c+'|'+keyOf(c,r),JSON.stringify(r))));m.set('meta|settings',JSON.stringify(state.settings));return m}
+function pendingChanges(){const cur=currentMap(),ch=[];cur.forEach((j,id)=>{if(snap[id]!==j)ch.push(id)});Object.keys(snap).forEach(id=>{if(!cur.has(id))ch.push(id)});return {cur,ch}}
+function pendingCount(){try{return pendingChanges().ch.length}catch(e){return 0}}
+function serverBase(){if(cfg.url)return cfg.url.replace(/\/*$/,'/');if(!STATIC_HOST&&/^https?:$/.test(location.protocol))return new URL('./',location.href).href;return null}
+async function api(path,body){
+  const base=serverBase();if(!base)throw new Error('No sync server set');
+  const ctl=new AbortController(),t=setTimeout(()=>ctl.abort(),20000);
+  try{const r=await fetch(base+path,{method:body?'POST':'GET',headers:{'content-type':'application/json','x-mill-key':cfg.key||''},body:body?JSON.stringify(body):undefined,signal:ctl.signal,cache:'no-store'});
+    if(r.status===401)throw new Error('Wrong access key');if(!r.ok)throw new Error('Server error '+r.status);return await r.json()}
+  catch(e){if(e.name==='AbortError'||e instanceof TypeError)throw new Error('Server not reachable');throw e}finally{clearTimeout(t)}
+}
+function busyTyping(){const a=document.activeElement;return !!($('#modal')&&$('#modal').innerHTML)||!!(a&&a.closest&&a.closest('#main')&&/INPUT|SELECT|TEXTAREA/.test(a.tagName))}
+function applyRemote(changes,sent,force){
+  if(!changes||!changes.length)return 0;
+  const cur=currentMap();let n=0;
+  changes.forEach(({c,k,v})=>{const id=c+'|'+k,local=cur.has(id)?cur.get(id):null,base=sent&&sent.has(id)?sent.get(id):(id in snap?snap[id]:null),j=v==null?null:JSON.stringify(v);
+    if(!force&&local!==base)return;               // this device has newer unsynced edits: keep them, they go up next
+    if(j===local){if(j==null)delete snap[id];else snap[id]=j;return}
+    if(c==='meta'){if(v&&k==='settings')state.settings=v}
+    else{const arr=getColl(state,c);if(!arr)return;const i=arr.findIndex(r=>keyOf(c,r)===k);if(v==null){if(i>=0)arr.splice(i,1)}else if(i>=0)arr[i]=v;else arr.push(v)}
+    if(j==null)delete snap[id];else snap[id]=j;n++});
+  if(n){COLLS.forEach(c=>{const a=getColl(state,c);if(a&&c!=='parties')a.sort((x,y)=>(x.date||'').localeCompare(y.date||''))});migrate(state);
+    if(busyTyping()){pendingRemote=true;toast(n+' update(s) from other devices — screen refreshes when you finish')}else{render();toast(n+' update(s) from other devices')}}
+  return n;
+}
+async function syncNow(manual){
+  if(BUILD!=='pwa'||syncing)return;
+  if(!serverBase()){if(manual)toast('Set up the sync server in Settings → Sync & devices');renderSave();return}
+  if(!navigator.onLine){if(manual)toast('Offline — entries are saved on this device and will sync automatically');renderSave();return}
+  syncing=true;renderSave();
+  try{
+    if(!cfg.device){try{const r=await api('api/register',{});if(r.device){cfg.device=r.device;await KV.set('cfg',cfg)}}catch(e){}}
+    if(!syncMeta.pulled){const r=await api('api/sync',{cursor:0,changes:[]});applyRemote(r.changes,null,true);syncMeta.cursor=r.cursor;syncMeta.pulled=true}
+    const {cur,ch}=pendingChanges(),sent=new Map();
+    const changes=ch.map(id=>{const i=id.indexOf('|'),j=cur.has(id)?cur.get(id):null;sent.set(id,j);return {c:id.slice(0,i),k:id.slice(i+1),v:j==null?null:JSON.parse(j)}});
+    const r=await api('api/sync',{cursor:syncMeta.cursor,changes,device:dev()});
+    sent.forEach((j,id)=>{if(j==null)delete snap[id];else snap[id]=j});
+    applyRemote(r.changes,sent,false);
+    syncMeta.cursor=r.cursor;syncMeta.last=Date.now();syncMeta.err='';dirty=false;
+    if(manual)toast(changes.length?'Synced '+changes.length+' change(s)':'Everything is up to date');
+  }catch(e){syncMeta.err=e.message;if(manual)toast('Sync failed: '+e.message+' — entries are safe on this device')}
+  syncing=false;await persistNow();renderSave();if(manual&&view==='settings'&&!busyTyping())render();
+}
+function renderSyncPill(p,b){
+  const n=pendingCount();b.style.display='';b.disabled=syncing;b.textContent=syncing?'Syncing…':'Sync now';
+  if(!serverBase()){p.className='pill';p.textContent='Saved on this device';b.style.display='none';return}
+  if(!navigator.onLine){p.className='pill dirty';p.textContent='Offline · '+(n?n+' saved on device, will sync':'all saved on device');return}
+  if(syncMeta.err){p.className='pill dirty';p.textContent=(n?n+' waiting · ':'')+syncMeta.err;return}
+  if(n){p.className='pill dirty';p.textContent=n+' change(s) to sync';return}
+  p.className='pill ok';p.textContent='Online · synced '+(syncMeta.last?new Date(syncMeta.last).toLocaleTimeString('en-IN',{hour:'2-digit',minute:'2-digit'}):'');
+}
+function syncCard(){
+  if(BUILD!=='pwa')return `<div class="card"><h2>Offline use & multiple devices</h2><p style="margin:0 0 8px">This online page needs internet to open. If the connection drops while it's open, keep working — entries stay on this device; press <b>Save</b> when you're back online.</p><p class="muted" style="margin:0;font-size:13px">For full offline working on every phone and computer with automatic sync, install the <b>Rice Mill Manager offline app package</b> (server + installable app) on your mill computer or a cloud server.</p></div>`;
+  const n=pendingCount(),base=serverBase();
+  return `<div class="card"><h2>Sync & devices</h2><p class="muted" style="margin:-6px 0 12px;font-size:13px">Work offline anytime — every entry is saved on this device first, then synced to the mill server whenever there's a connection.</p>
+  <div class="form"><div class="f" style="grid-column:span 2"><label>Sync server address</label><input id="syUrl" value="${esc(cfg.url)}" placeholder="${esc(/^https?:$/.test(location.protocol)?'Blank = this server ('+location.host+')':'https://your-mill-server')}"></div>
+  <div class="f"><label>Access key</label><input id="syKey" type="password" value="${esc(cfg.key)}" placeholder="Set on the server"></div>
+  <div class="f"><label>This device's code</label><input id="syDev" value="${esc(cfg.device)}" maxlength="3" style="text-transform:uppercase"><div class="hint">In invoice no. e.g. ${esc(S().firm.invPrefix)}${esc(cfg.device||'A')}-0001 — unique per device</div></div></div>
+  <div class="calc"><div><div class="l">Status</div><div class="v">${!navigator.onLine?'Offline':syncMeta.err?esc(syncMeta.err):base?'Online':'This device only'}</div></div><div><div class="l">Waiting to sync</div><div class="v">${n} change(s)</div></div><div><div class="l">Last synced</div><div class="v">${syncMeta.last?new Date(syncMeta.last).toLocaleString('en-IN',{day:'numeric',month:'short',hour:'2-digit',minute:'2-digit'}):'Never'}</div></div><div><div class="l">Server</div><div class="v" style="font-size:13px;word-break:break-all">${esc(base||'—')}</div></div></div>
+  <div class="row" style="margin-top:12px"><button class="btn primary" id="sySync">Sync now</button><button class="btn" id="syTest">Test connection</button>${installEvt?'<button class="btn" id="syInstall">Install app on this device</button>':''}</div></div>`;
+}
+function bindSyncCard(){
+  if(BUILD!=='pwa')return;
+  const upd=async()=>{const url=V('syUrl').trim(),key=V('syKey'),dv=V('syDev').trim().toUpperCase().replace(/[^A-Z0-9]/g,'');
+    const moved=url!==cfg.url;cfg.url=url;cfg.key=key;if(dv)cfg.device=dv;await KV.set('cfg',cfg);
+    if(moved){syncMeta={cursor:0,pulled:false,last:0,err:''};snap={};await persistNow()}toast('Sync settings saved');syncNow()};
+  ['syUrl','syKey','syDev'].forEach(i=>$('#'+i).addEventListener('change',upd));
+  $('#sySync').onclick=()=>syncNow(true);
+  $('#syTest').onclick=async()=>{try{const r=await api('api/ping');toast('Connected to '+(r.name||'server')+' ✓')}catch(e){toast('Not connected: '+e.message)}};
+  const ins=$('#syInstall');if(ins)ins.onclick=async()=>{installEvt.prompt();try{await installEvt.userChoice}catch(e){}installEvt=null;render()};
+}
+window.addEventListener('beforeinstallprompt',e=>{e.preventDefault();installEvt=e;if(view==='settings'&&!busyTyping())render()});
+async function bootPwa(){
+  shell();$('#main').innerHTML='<p class="muted">Opening mill data…</p>';
+  cfg=Object.assign({url:'',key:'',device:''},await KV.get('cfg')||{});
+  const st=await KV.get('state');if(st)state=st;snap=await KV.get('snap')||{};syncMeta=Object.assign({cursor:0,pulled:false,last:0,err:''},await KV.get('sync')||{});
+  migrate(state);dirty=false;if(touchLastSeen()){schedulePersist()}
+  window.addEventListener('hashchange',route);route();
+  if('serviceWorker' in navigator&&/^https?:$/.test(location.protocol))navigator.serviceWorker.register('sw.js').catch(()=>{});
+  try{navigator.storage&&navigator.storage.persist&&navigator.storage.persist()}catch(e){}
+  syncNow();
+  setInterval(()=>{if(touchLastSeen()){schedulePersist();render()}if(pendingRemote&&!busyTyping()){pendingRemote=false;render()}syncNow()},20000);
+  document.addEventListener('visibilitychange',()=>{if(document.visibilityState==='visible')syncNow()});
+}
+
+/* ---------- Excel / CSV import ---------- */
+function loadXLSX(){if(window.XLSX)return Promise.resolve(window.XLSX);const CDN='https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js';const srcs=BUILD==='pwa'?['vendor/xlsx.full.min.js',CDN]:[CDN];
+  const tryLoad=i=>new Promise((res,rej)=>{const s=document.createElement('script');s.src=srcs[i];s.onload=()=>res(window.XLSX);s.onerror=()=>{s.remove();i+1<srcs.length?tryLoad(i+1).then(res,rej):rej(new Error('Could not load the Excel reader — connect to the internet once and try again'))};document.head.appendChild(s)});
+  return loadXLSX._p||(loadXLSX._p=tryLoad(0).catch(e=>{loadXLSX._p=null;throw e}))}
+const compact=x=>String(x==null?'':x).toLowerCase().replace(/[^a-z0-9]+/g,'');
+const tokens=x=>String(x==null?'':x).toLowerCase().split(/[^a-z0-9]+/).filter(Boolean);
+const str=v=>v==null?'':(v instanceof Date?'':String(v)).trim();
+function dice(a,b){if(a===b)return 1;if(a.length<2||b.length<2)return 0;const m=new Map();for(let i=0;i<a.length-1;i++){const g=a.slice(i,i+2);m.set(g,(m.get(g)||0)+1)}let n=0;for(let i=0;i<b.length-1;i++){const g=b.slice(i,i+2),c=m.get(g);if(c){n++;m.set(g,c-1)}}return 2*n/(a.length+b.length-2)}
+function parseNum(v){if(typeof v==='number')return v;if(v==null||v instanceof Date)return NaN;let s=String(v).trim();if(!s)return NaN;const neg=/^\(.*\)$/.test(s)||/^-/.test(s);s=s.replace(/rs\.?|inr|₹|\/-|,|\s/gi,'').replace(/[a-z%]+$/i,'').replace(/^[(-]|\)$/g,'');if(!/^\d*\.?\d+$/.test(s))return NaN;const n=parseFloat(s);return neg?-n:n}
+const MON={jan:1,feb:2,mar:3,apr:4,may:5,jun:6,jul:7,aug:8,sep:9,sept:9,oct:10,nov:11,dec:12};
+function isoOf(y,m,d){if(y<100)y+=2000;if(m<1||m>12||d<1||d>31||y<1990||y>2100)return null;const dt=new Date(y,m-1,d);if(dt.getMonth()!==m-1)return null;return y+'-'+String(m).padStart(2,'0')+'-'+String(d).padStart(2,'0')}
+function parseDate(v){
+  if(v instanceof Date&&!isNaN(v)){const d=new Date(v.getTime()+60000);return isoOf(d.getFullYear(),d.getMonth()+1,d.getDate())}
+  if(typeof v==='number'){if(v>25000&&v<80000){const d=new Date(Date.UTC(1899,11,30)+Math.round(v)*864e5);return isoOf(d.getUTCFullYear(),d.getUTCMonth()+1,d.getUTCDate())}return null}
+  const s=String(v==null?'':v).trim().toLowerCase();if(!s)return null;let m;
+  if(m=s.match(/^(\d{4})[-\/.](\d{1,2})[-\/.](\d{1,2})/))return isoOf(+m[1],+m[2],+m[3]);
+  if(m=s.match(/^(\d{1,2})[-\/.](\d{1,2})[-\/.](\d{2,4})$/)){let a=+m[1],b=+m[2];return b>12&&a<=12?isoOf(+m[3],a,b):isoOf(+m[3],b,a)}
+  if(m=s.match(/^(\d{1,2})(?:st|nd|rd|th)?[\s\-\/.,]*([a-z]{3,9})[\s\-\/.,]*(\d{2,4})$/)){const mo=MON[m[2].slice(0,4)]||MON[m[2].slice(0,3)];return mo?isoOf(+m[3],mo,+m[1]):null}
+  if(m=s.match(/^([a-z]{3,9})[\s\-.]*(\d{1,2})(?:st|nd|rd|th)?,?[\s\-]*(\d{2,4})$/)){const mo=MON[m[1].slice(0,4)]||MON[m[1].slice(0,3)];return mo?isoOf(+m[3],mo,+m[2]):null}
+  return null;
+}
+const GSTIN_RE=/^[0-9]{2}[A-Z0-9]{13}$/;
+const KW={broken:/broken|kurunai|noi\b|nuku|tukda|khanda|brokens/i,bran:/bran|thavidu|bhusi|polish/i,husk:/husk|umi\b|bhusa|chaff|tush/i,paddy:/paddy|nellu|dhan|nel\b|raw\s*paddy/i};
+function resolveVariety(v){const raw=str(v);if(!raw)return {v:null,raw:''};const c=compact(raw).replace(/paddy|rice|nellu|arisi|dhan|chawal|raw|boiled|new|old/g,'');
+  let best=null,bs=0;S().varieties.forEach(x=>{const cx=compact(x);let sc=c===cx?1:(c&&(cx.includes(c)||c.includes(cx))&&Math.min(c.length,cx.length)>=3?0.9:dice(c,cx));if(cx.startsWith('sona')&&/sona|masuri|masoori|masuri/.test(c))sc=Math.max(sc,0.85);if(/^ir\d/.test(cx)&&c===cx.replace(/\D/g,''))sc=Math.max(sc,0.8);if(sc>bs){bs=sc;best=x}});
+  return bs>=0.7?{v:best,raw}:{v:null,raw:raw.replace(/\s+/g,' ')};}
+function resolveItem(v,ctx){const raw=str(v);for(const k of ['broken','bran','husk'])if(KW[k].test(raw))return {item:k};const r=resolveVariety(raw);if(r.v)return {item:'rice:'+r.v};if(!raw)return {err:'Item missing'};if(imp.addVarieties){ctx.newVar.add(r.raw);return {item:'rice:'+r.raw,isNew:true}}return {err:'Unknown item "'+raw+'"'}}
+function unitFromHeader(h){const c=String(h||'').toLowerCase();if(/qtl|quintal|qntl|qtls|\bq\b/.test(c))return 'qtl';if(/tonne|\btons?\b|\bmt\b/.test(c))return 't';if(/\bbags?\b|moot|bori/.test(c)&&!/kg/.test(c))return 'bags';if(/kg|kilo/.test(c))return 'kg';return null}
+const IGNORE_HDR=new Set(['slno','sno','sino','srno','sr','sl','serialno','serial','sn','no','sno']);
+const F_=(k,label,kind,syn,o)=>Object.assign({k,label,kind,syn},o||{});
+const IMPORT_TYPES={
+  purchases:{label:'Paddy purchases',icon:'🌾',fields:[
+    F_('date','Date','date',['date','billdate','purchasedate','dt','dated','arrivaldate','thethi','tarikh'],{req:1}),
+    F_('supplier','Farmer / supplier','name',['farmer','farmername','supplier','suppliername','party','partyname','name','seller','vendor','vivasayi','kisan','farmerssupplier','agent','from'],{req:1}),
+    F_('variety','Variety','variety',['variety','paddyvariety','paddytype','paddy','type','grade','nellu','nelvagai','dhan','crop','item','product','quality'],{req:1}),
+    F_('bags','No. of bags','num',['bags','bag','noofbags','nobags','moot','moots','moottai','noofmoots','bori','sacks','packs','totalbags']),
+    F_('grossKg','Gross weight','qty',['gross','grosswt','grossweight','grosskg','loadweight','weighbridge','totalweight','weight','wt'],{unit:1}),
+    F_('netKg','Net weight','qty',['net','netwt','netweight','netkg','netqty','quantity','qty','finalweight','paddyqty','acceptedweight'],{unit:1}),
+    F_('moisture','Moisture %','pct',['moisture','moist','mc','moisturepercent','moisture%','eerapatham','eeram','nami','namee']),
+    F_('rate','Rate per qtl','num',['rate','rateperqtl','rateqtl','rateperquintal','price','priceperqtl','vilai','bhav','ratequintal']),
+    F_('amount','Amount','num',['amount','amt','netamount','totalamount','total','value','payable','amountpayable','rupees','tholai','rs']),
+    F_('billNo','Bill / slip no.','text',['billno','slipno','receiptno','voucherno','refno','ref','tokenno','token','weighmentno','billnumber','vno'])]},
+  sales:{label:'Sales / invoices',icon:'🧾',fields:[
+    F_('date','Date','date',['date','invoicedate','billdate','saledate','dt','dated'],{req:1}),
+    F_('customer','Customer','name',['customer','customername','party','partyname','buyer','name','billto','client','dealer','vyapari','trader'],{req:1}),
+    F_('gstin','Customer GSTIN','gstin',['gstin','gstno','gst','gstnumber','gstinno','customergstin','gstinuin']),
+    F_('item','Item / variety','item',['item','product','variety','description','particulars','goods','itemname','rice','quality','grade','arisi'],{req:1}),
+    F_('qty','Quantity','qty',['qty','quantity','weight','wt','netweight','netwt','kgs','qtls','quintal','qntl'],{unit:1}),
+    F_('bags','No. of bags','num',['bags','bag','noofbags','nobags','packs','moot','bori']),
+    F_('rate','Rate per qtl','num',['rate','rateperqtl','price','rateqtl','priceperqtl','rateperquintal']),
+    F_('amount','Taxable value','num',['taxable','taxablevalue','taxableamount','amount','amt','value','basic','basicamount','grossamount']),
+    F_('gst','GST %','pct',['gstrate','gst%','gstpercent','taxrate','rateoftax','gstper']),
+    F_('tax','GST amount','num',['gstamount','taxamount','tax','totaltax','igst','cgstsgst','gst','gstvalue']),
+    F_('total','Invoice total','num',['total','invoicetotal','invoicevalue','grandtotal','totalamount','netamount','billamount']),
+    F_('invoiceNo','Invoice no.','text',['invoiceno','invno','billno','invoicenumber','billnumber','voucherno','vno','invoice'])]},
+  batches:{label:'Milling batches',icon:'⚙️',fields:[
+    F_('date','Date','date',['date','millingdate','dt','dated','day'],{req:1}),
+    F_('variety','Variety','variety',['variety','paddy','paddytype','type','item','grade','nellu'],{req:1}),
+    F_('paddyKg','Paddy input','qty',['paddy','paddyinput','paddykg','input','paddyqty','paddymilled','milled','paddyused','rawpaddy'],{unit:1,req:1}),
+    F_('headKg','Head rice output','qty',['headrice','rice','riceoutput','output','headriceqty','riceqty','arisi','wholerice','fullrice','rice_kg'],{unit:1,req:1}),
+    F_('brokenKg','Broken','qty',['broken','brokenrice','brokens','kurunai','noi','nuku'],{unit:1}),
+    F_('branKg','Bran','qty',['bran','ricebran','thavidu','polish'],{unit:1}),
+    F_('huskKg','Husk','qty',['husk','umi','bhusa','chaff'],{unit:1})]},
+  payments:{label:'Payments / receipts',icon:'💰',fields:[
+    F_('date','Date','date',['date','paymentdate','receiptdate','dt','dated','txndate','transactiondate'],{req:1}),
+    F_('party','Party','name',['party','partyname','name','customer','farmer','supplier','payee','payer','paidto','receivedfrom','account','ledger','particulars','accountname','head'],{req:1}),
+    F_('amount','Amount','num',['amount','amt','rupees','value','sum','paymentamount']),
+    F_('received','Received (in)','num',['received','receipt','receipts','credit','in','inflow','amountreceived','vasool','jama']),
+    F_('paid','Paid (out)','num',['paid','payment','payments','debit','out','outflow','amountpaid','advance','kharch']),
+    F_('dir','Received / paid','text',['type','direction','txntype','drcr','receiptpayment','nature','transaction']),
+    F_('mode','Mode','text',['mode','paymentmode','paidby','via','method','instrument','by']),
+    F_('ref','Reference','text',['ref','reference','refno','utr','chequeno','chqno','txnid','transactionid','invoiceno','billno']),
+    F_('note','Note','text',['note','notes','remarks','remark','narration','details','description'])]},
+  parties:{label:'Parties (customers / farmers)',icon:'👥',fields:[
+    F_('name','Name','name',['name','partyname','party','customer','customername','farmer','farmername','supplier','suppliername','firm','firmname','company'],{req:1}),
+    F_('kind','Customer or supplier','text',['type','partytype','category','group','kind','role']),
+    F_('gstin','GSTIN','gstin',['gstin','gstno','gst','gstnumber','gstinno']),
+    F_('state','State','text',['state','statename','statecode','placeofsupply','pos']),
+    F_('phone','Phone','phone',['phone','mobile','mobileno','phoneno','contact','contactno','cell','whatsapp']),
+    F_('address','Address','text',['address','village','place','town','city','location','ooru','area'])]},
+  opening:{label:'Opening stock',icon:'📦',fields:[
+    F_('item','Item','item',['item','itemname','product','variety','description','particulars','stockitem','name'],{req:1}),
+    F_('qty','Quantity','qty',['qty','quantity','stock','closingstock','openingstock','balance','weight','kgs','qtls'],{unit:1,req:1})]}
+};
+let imp=null; // current import session
+function headerScore(h,f){const c=compact(h);if(!c||IGNORE_HDR.has(c))return 0;const tk=tokens(h);let best=0;
+  f.syn.forEach(sy=>{let s=0;if(c===sy)s=1;else if(tk.includes(sy)&&(sy.length>=3||tk.length<=2))s=0.88;else if(sy.length>=4&&c.includes(sy))s=0.7+0.12*Math.min(1,sy.length/9);else if(sy.length>=5&&dice(c,sy)>=0.78)s=0.6;if(s>best)best=s});
+  const lab=compact(f.label);if(c===lab)best=1;return best}
+function colStats(i){const vals=[];for(let r=imp.headerRow+1;r<imp.rows.length&&vals.length<200;r++){const v=imp.rows[r][i];if(v!==''&&v!=null)vals.push(v)}
+  const n=vals.length||1,share=fn=>vals.filter(fn).length/n;
+  const numsh=share(v=>isFinite(parseNum(v))),nums=vals.map(parseNum).filter(isFinite);
+  return {n:vals.length,num:numsh,date:share(v=>parseDate(v)&&!(typeof v==='number'&&v<25000)),gstin:share(v=>GSTIN_RE.test(String(v).trim().toUpperCase())),
+    pct:nums.length?nums.filter(x=>x>=5&&x<=35).length/n:0,text:share(v=>typeof v==='string'&&!isFinite(parseNum(v))&&!parseDate(v)),
+    variety:share(v=>{const s=str(v);return !!resolveVariety(s).v||KW.broken.test(s)||KW.bran.test(s)||KW.husk.test(s)}),phone:share(v=>/^\+?[\d\s-]{10,14}$/.test(String(v).trim())),
+    median:nums.length?nums.slice().sort((a,b)=>a-b)[Math.floor(nums.length/2)]:0,uniq:new Set(vals.map(String)).size/n}}
+function contentScore(f,st){if(!st.n)return {s:0,bad:false};switch(f.kind){
+  case 'date':return {s:st.date,bad:st.date<0.5};case 'num':case 'qty':return {s:st.num,bad:st.num<0.6};case 'pct':return {s:st.pct,bad:st.num<0.6||st.pct<0.5};
+  case 'gstin':return {s:st.gstin,bad:st.gstin<0.3};case 'phone':return {s:st.phone,bad:st.phone<0.5};
+  case 'variety':case 'item':return {s:st.variety,bad:st.text+st.variety<0.5};case 'name':return {s:st.text*0.6,bad:st.text<0.5};default:return {s:0.2,bad:false}}}
+function autoMap(type){const t=IMPORT_TYPES[type],cand=[];
+  t.fields.forEach(f=>imp.cols.forEach(c=>{const h=headerScore(c.name,f),cs=contentScore(f,c.st);let s=h+cs.s*0.35;if(cs.bad)s*=0.3;if(!h&&!(f.kind==='gstin'&&cs.s>0.6)&&!(f.kind==='date'&&cs.s>0.8))s=0;if(s>=0.5)cand.push({f:f.k,c:c.i,s,h})}));
+  const reqOf=k=>t.fields.find(f=>f.k===k).req?1:0;cand.sort((a,b)=>b.s-a.s||reqOf(b.f)-reqOf(a.f));const map={},used=new Set(),conf={};
+  cand.forEach(x=>{if(map[x.f]!=null||used.has(x.c))return;map[x.f]=x.c;used.add(x.c);conf[x.f]=x.h>=0.85?'name':x.h>0?'similar':'values'});
+  const wsum=t.fields.reduce((a,f)=>a+(f.req?1.5:1),0);let got=0;t.fields.forEach(f=>{if(map[f.k]!=null){const x=cand.find(y=>y.f===f.k&&y.c===map[f.k]);got+=Math.min(1,x.s)*(f.req?1.5:1)}});
+  const reqOk=t.fields.filter(f=>f.req).every(f=>map[f.k]!=null);
+  const useful=imp.cols.filter(c=>c.st.n&&!IGNORE_HDR.has(compact(c.name))).length||1;const cover=Math.min(1,used.size/useful);
+  return {map,conf,score:(got/wsum*0.6+cover*0.4)*(reqOk?1:0.6)}}
+function analyze(){
+  const rows=imp.rows;let best=0,bh=0;
+  for(let r=0;r<Math.min(20,rows.length);r++){const row=rows[r]||[];let s=0,filled=0;row.forEach(v=>{if(v!==''&&v!=null){filled++;if(typeof v==='string'&&!isFinite(parseNum(v))){let m=0;Object.values(IMPORT_TYPES).forEach(t=>t.fields.forEach(f=>{m=Math.max(m,headerScore(v,f))}));s+=m}}});if(filled>=2&&s>best){best=s;bh=r}}
+  if(imp.headerRow==null)imp.headerRow=bh;
+  const width=Math.max(0,...rows.slice(imp.headerRow,imp.headerRow+50).map(r=>r.length));
+  imp.cols=[];for(let i=0;i<width;i++){const name=str(rows[imp.headerRow][i])||('Column '+XLSX.utils.encode_col(i));imp.cols.push({i,name,letter:XLSX.utils.encode_col(i)})}
+  imp.cols.forEach(c=>c.st=colStats(c.i));
+  imp.scores={};Object.keys(IMPORT_TYPES).forEach(k=>imp.scores[k]=autoMap(k));
+  if(!imp.typeLocked){imp.type=Object.keys(imp.scores).sort((a,b)=>imp.scores[b].score-imp.scores[a].score)[0]}
+  applyAuto();
+}
+function applyAuto(){const a=imp.scores[imp.type]||autoMap(imp.type);imp.map=Object.assign({},a.map);imp.conf=Object.assign({},a.conf);imp.units={};
+  IMPORT_TYPES[imp.type].fields.forEach(f=>{if(!f.unit)return;const c=imp.map[f.k];if(c==null){imp.units[f.k]='kg';return}const u=unitFromHeader(imp.cols[c].name);
+    if(u)imp.units[f.k]=u;else{const md=imp.cols[c].st.median;imp.units[f.k]=md>0&&md<300&&f.k!=='bags'?'qtl':'kg';imp.unitGuess=imp.unitGuess||{};imp.unitGuess[f.k]=true}});}
+function qtyKg(v,unit){const n=parseNum(v);if(!isFinite(n))return NaN;return unit==='qtl'?n*100:unit==='t'?n*1000:unit==='bags'?n*S().riceBagKg:n}
+function normMode(v){const s=str(v).toLowerCase();if(!s)return 'Cash';if(/upi|gpay|google|phonepe|paytm|bhim/.test(s))return 'UPI';if(/cheq|chq|check|dd\b/.test(s))return 'Cheque';if(/neft|rtgs|imps|bank|transfer|online|a\/c/.test(s))return 'Bank transfer';if(/cash|rokda|kaasu/.test(s))return 'Cash';return 'Bank transfer'}
+function stateFrom(v){const s=str(v);if(!s)return null;const d=s.match(/^\d{1,2}/);if(d&&STATES[d[0].padStart(2,'0')])return d[0].padStart(2,'0');const c=compact(s);for(const [k,n] of Object.entries(STATES))if(compact(n)===c||c.includes(compact(n)))return k;if(/^tn$/.test(c))return '33';if(/^ka$/.test(c))return '29';if(/^kl$/.test(c))return '32';if(/^ap$/.test(c))return '37';if(/^ts$|^tg$/.test(c))return '36';return null}
+function buildRow(get,ctx){const s=S(),t=imp.type,e=[],w=[];let rec=null,dup=false,key='';
+  const date=()=>{const d=parseDate(get('date'));if(!d)e.push(str(get('date'))?'Date "'+str(get('date'))+'" not understood':'Date missing');return d};
+  const Q=k=>qtyKg(get(k),imp.units[k]);const N=k=>parseNum(get(k));const info=[];
+  if(t==='purchases'){const d=date(),sup=str(get('supplier'));if(!sup)e.push('Farmer / supplier missing');
+    const vr=resolveVariety(get('variety'));let v=vr.v;if(!v){if(vr.raw&&imp.addVarieties){v=vr.raw;ctx.newVar.add(vr.raw)}else e.push(vr.raw?'Unknown variety "'+vr.raw+'"':'Variety missing')}
+    const bags=N('bags')||0,moist=N('moisture');let net=Q('netKg'),gross=Q('grossKg');
+    if(!(net>0)){if(gross>0){net=calcPurchase(s,{gross,bags,moist:isFinite(moist)?moist:s.stdMoisture,rate:0}).net;info.push('Net weight worked out from gross, tare & moisture')}else e.push('Net or gross weight needed')}
+    let rate=N('rate');const amt=N('amount');if(!(rate>0)){if(amt>0&&net>0)rate=Math.round(amt/(net/100)*100)/100;else e.push('Rate or amount needed')}
+    let amount=Math.round(net/100*rate);if(amt>0&&rate>0&&net>0&&Math.abs(amt-amount)>Math.max(5,amount*0.01)){w.push('File amount '+inr(amt)+' ≠ rate × weight '+inr(amount)+' — file amount kept');amount=Math.round(amt)}
+    if(isFinite(moist)&&(moist<8||moist>30))w.push('Moisture '+moist+'% looks unusual');if(rate>0&&(rate<1000||rate>6000))w.push('Rate ₹'+num(rate)+'/qtl looks unusual — check the unit');
+    const billNo=str(get('billNo'));
+    rec={date:d,supplier:sup,variety:v,bags,grossKg:Math.round(gross>0?gross:net),tarePerBag:s.tarePerBag,moisture:isFinite(moist)?moist:s.stdMoisture,fm:0,rate,netKg:Math.round(net),amount,hamali:Math.round(bags*s.hamaliPerBag),billNo};
+    dup=(billNo&&state.purchases.some(p=>p.billNo===billNo))||state.purchases.some(p=>p.date===d&&p.supplier.toLowerCase()===sup.toLowerCase()&&Math.abs(p.netKg-net)<1);key=[d,sup.toLowerCase(),Math.round(net),billNo].join('|');}
+  else if(t==='sales'){const d=date(),cu=str(get('customer'));if(!cu)e.push('Customer missing');
+    const it=resolveItem(get('item'),ctx);if(it.err)e.push(it.err);
+    let kg=Q('qty');const bags=N('bags');if(!(kg>0)&&bags>0)kg=bags*s.riceBagKg;if(!(kg>0))e.push('Quantity missing');
+    const item=it.item||'';let gst=N('gst');const tax=N('tax'),total=N('total');let amount=N('amount'),rate=N('rate');
+    if(!isFinite(gst)){if(amount>0&&tax>=0&&isFinite(tax))gst=Math.round(tax/amount*1000)/10;else gst=item.startsWith('rice:')?s.gst.rice:(s.gst[item]??5)}
+    if(!(amount>0)){if(rate>0&&kg>0)amount=Math.round(kg/100*rate);else if(total>0)amount=Math.round(total/(1+gst/100));}
+    if(!(rate>0)&&amount>0&&kg>0)rate=Math.round(amount/(kg/100)*100)/100;if(!(amount>0))e.push('Rate, amount or total needed');
+    const taxV=isFinite(tax)&&tax>=0&&amount>0?Math.round(tax):Math.round(amount*gst/100);
+    if(rate>0&&item.startsWith('rice:')&&(rate<1500||rate>12000))w.push('Rate ₹'+num(rate)+'/qtl looks unusual — check the quantity unit');
+    const g=str(get('gstin')).toUpperCase();if(g&&!GSTIN_RE.test(g))w.push('GSTIN "'+g+'" not valid — ignored');if(g&&GSTIN_RE.test(g)&&cu)ctx.partyUpd[cu]={gstin:g,stateCode:g.slice(0,2),kind:'customer'};
+    const invoiceNo=str(get('invoiceNo'));
+    rec={date:d,customer:cu,item,kg:Math.round(kg),rate,gst,amount:Math.round(amount),tax:taxV,total:Math.round(amount)+taxV,invoiceNo};
+    if(it.isNew)w.push('New rice variety "'+item.slice(5)+'"');
+    dup=(invoiceNo&&state.sales.some(x=>x.invoiceNo===invoiceNo))||state.sales.some(x=>x.date===d&&x.customer.toLowerCase()===cu.toLowerCase()&&x.item===item&&Math.abs(x.kg-kg)<1);key=[d,cu.toLowerCase(),item,Math.round(kg),invoiceNo].join('|');}
+  else if(t==='batches'){const d=date();const vr=resolveVariety(get('variety'));let v=vr.v;if(!v){if(vr.raw&&imp.addVarieties){v=vr.raw;ctx.newVar.add(vr.raw)}else e.push(vr.raw?'Unknown variety "'+vr.raw+'"':'Variety missing')}
+    const pk=Q('paddyKg'),hk=Q('headKg'),bk=Q('brokenKg')||0,bn=Q('branKg')||0,hu=Q('huskKg')||0;if(!(pk>0))e.push('Paddy input missing');if(!(hk>0))e.push('Head rice output missing');
+    if(pk>0&&hk>0){const y=hk/pk*100;if(y<45||y>78)w.push('Out-turn '+y.toFixed(1)+'% looks unusual — check units');if(hk+bk+bn+hu>pk*1.03)e.push('Outputs add up to more than paddy input')}
+    if(!bn&&!hu)w.push('Bran / husk not in file — recorded as 0');
+    rec={date:d,variety:v,paddyKg:Math.round(pk),headKg:Math.round(hk),brokenKg:Math.round(bk),branKg:Math.round(bn),huskKg:Math.round(hu)};
+    dup=state.batches.some(b=>b.date===d&&b.variety===v&&Math.abs(b.paddyKg-pk)<1);key=[d,v,Math.round(pk)].join('|');}
+  else if(t==='payments'){const d=date(),pa=str(get('party'));if(!pa)e.push('Party missing');
+    let kind=null,amt=N('amount');const rc=N('received'),pd=N('paid'),dt=str(get('dir')).toLowerCase();
+    if(rc>0&&!(pd>0)){kind='receive';amt=rc}else if(pd>0&&!(rc>0)){kind='pay';amt=pd}
+    if(!kind&&dt){if(/rec|receipt|in\b|collect|vasool|jama|from/.test(dt))kind='receive';else if(/paid|pay|out\b|advance|to\b|kodu|kharch/.test(dt))kind='pay'}
+    if(!kind){const p=partyOf(pa);if(p)kind=p.kind==='customer'?'receive':'pay';else{kind=imp.defaultDir;w.push('Direction not in file — treated as '+(kind==='receive'?'received':'paid'))}}
+    if(!(amt>0))e.push('Amount missing');
+    rec={date:d,party:pa,kind,amount:Math.round((amt||0)*100)/100,mode:normMode(get('mode')),ref:str(get('ref')),note:str(get('note'))};
+    if(pa&&!partyOf(pa)){ctx.partyNew[pa]=kind==='receive'?'customer':'supplier';w.push('New party "'+pa+'" will be added as '+(kind==='receive'?'customer':'farmer / supplier'))}
+    dup=state.payments.some(x=>x.date===d&&x.party.toLowerCase()===pa.toLowerCase()&&Math.abs(x.amount-amt)<1&&x.kind===kind);key=[d,pa.toLowerCase(),Math.round(amt),kind].join('|');}
+  else if(t==='parties'){const nm=str(get('name'));if(!nm)e.push('Name missing');const kt=str(get('kind')).toLowerCase();
+    const kind=/cust|buyer|sale|debtor|dealer|client/.test(kt)?'customer':/farm|supp|vendor|seller|creditor|purchase|agent/.test(kt)?'supplier':imp.defaultKind;
+    let g=str(get('gstin')).toUpperCase();if(g&&!GSTIN_RE.test(g)){w.push('GSTIN "'+g+'" not valid — skipped');g=''}
+    const sc=g?g.slice(0,2):(stateFrom(get('state'))||s.firm.stateCode);const ph=str(get('phone')).replace(/[^\d+]/g,'');
+    rec={name:nm,kind,gstin:g,stateCode:sc,phone:ph,address:str(get('address'))};if(nm&&partyOf(nm))info.push('Already in app — details will be updated');key=nm.toLowerCase();}
+  else if(t==='opening'){const raw=str(get('item'));let item=null;const isPaddy=KW.paddy.test(raw);
+    if(!isPaddy){const it=resolveItem(raw,ctx);if(it.err)e.push(it.err);else item=it.item}else{const vr=resolveVariety(raw);if(vr.v)item='paddy:'+vr.v;else if(imp.addVarieties&&vr.raw){const nm=vr.raw.replace(/paddy|nellu|dhan/ig,'').trim()||vr.raw;ctx.newVar.add(nm);item='paddy:'+nm}else e.push('Unknown paddy variety "'+raw+'"')}
+    const kg=Q('qty');if(!isFinite(kg))e.push('Quantity missing');rec={item,kg:Math.round(kg||0)};key=item||raw;}
+  return {rec,e,w,dup,key,info};
+}
+function buildAll(){if(!imp||!imp.rows)return;const ctx={newVar:new Set(),partyUpd:{},partyNew:{}},out=[],seen=new Map();let skipped=0;
+  const get=row=>k=>imp.map[k]==null?'':row[imp.map[k]];
+  for(let r=imp.headerRow+1;r<imp.rows.length;r++){const row=imp.rows[r]||[];const filled=row.filter(v=>v!==''&&v!=null);if(!filled.length)continue;
+    const first=filled.find(v=>typeof v==='string');if(first&&/^\s*(grand\s*)?total\b|^\s*sub\s*-?\s*total|^\s*(c\/f|b\/f|carried|brought)/i.test(first)){skipped++;continue}
+    const reqs=IMPORT_TYPES[imp.type].fields.filter(f=>f.req&&imp.map[f.k]!=null);if(reqs.length&&reqs.every(f=>{const v=row[imp.map[f.k]];return v===''||v==null})){skipped++;continue}
+    const b=buildRow(get(row),ctx);b.n=r+1;
+    if(imp.type!=='parties'&&imp.type!=='opening'&&!b.e.length&&seen.has(b.key)){b.w.push('Same as row '+seen.get(b.key)+' in this file');b.dupFile=true}else if(!b.e.length)seen.set(b.key,b.n);
+    b.status=b.e.length?'err':(b.dup?'dup':(b.w.length?'warn':'ok'));out.push(b)}
+  imp.built=out;imp.ctx=ctx;imp.skipped=skipped;
+}
+function importCount(){return (imp.built||[]).filter(b=>b.status==='ok'||b.status==='warn'||(b.status==='dup'&&!imp.skipDup)).length}
+function commitImport(){
+  const s=S(),id='IMP'+Date.now().toString(36).toUpperCase(),rows=imp.built.filter(b=>b.status==='ok'||b.status==='warn'||(b.status==='dup'&&!imp.skipDup));if(!rows.length)return;
+  const prevOpening={};
+  imp.ctx.newVar.forEach(v=>{if(s.varieties.includes(v))return;const vs=s.varieties,avg=o=>Math.round(vs.reduce((a,x)=>a+(o[x]||0),0)/Math.max(1,vs.length));s.prices.paddy[v]=avg(s.prices.paddy);s.prices.rice[v]=avg(s.prices.rice);s.yieldByVariety[v]=s.target.head;vs.push(v)});
+  Object.entries(imp.ctx.partyUpd).forEach(([n,u])=>{const p=partyOf(n);if(p){if(!p.gstin){p.gstin=u.gstin;p.stateCode=u.stateCode}}else state.parties.push({name:n,kind:u.kind,gstin:u.gstin,stateCode:u.stateCode,phone:'',address:''})});
+  Object.entries(imp.ctx.partyNew).forEach(([n,k])=>{if(!partyOf(n))state.parties.push({name:n,kind:k,gstin:'',stateCode:s.firm.stateCode,phone:'',address:''})});
+  const t=imp.type;
+  rows.forEach(b=>{const r=Object.assign({},b.rec,{imp:id});
+    if(t==='purchases'){r.id=nextId('P',state.purchases);if(!r.billNo)r.billNo=nextNo(s.firm.billPrefix,state.purchases,'billNo');state.purchases.push(r)}
+    else if(t==='sales'){r.id=nextId('S',state.sales);if(!r.invoiceNo)r.invoiceNo=nextNo(s.firm.invPrefix,state.sales,'invoiceNo');state.sales.push(r)}
+    else if(t==='batches'){r.id=nextId('B',state.batches);state.batches.push(r)}
+    else if(t==='payments'){r.id=nextId(r.kind==='receive'?'RC':'PY',state.payments);state.payments.push(r)}
+    else if(t==='parties'){delete r.imp;const p=partyOf(r.name);if(p){['gstin','phone','address'].forEach(k=>{if(r[k])p[k]=r[k]});if(r.gstin||str(b.rec.stateCode)!==s.firm.stateCode)p.stateCode=r.stateCode;p.kind=r.kind}else state.parties.push(r)}
+    else if(t==='opening'){if(!(r.item in prevOpening))prevOpening[r.item]=s.opening[r.item]||0;s.opening[r.item]=(imp.openMode==='add'?(s.opening[r.item]||0):0)+r.kg}});
+  syncParties(state);
+  if(t==='sales')state.sales.forEach(x=>{if(x.imp===id)x.inter=isInter(x.customer)});
+  ['purchases','sales','batches','payments'].forEach(c=>state[c].sort((a,b)=>a.date.localeCompare(b.date)));
+  state.imports=state.imports||[];state.imports.unshift({id,at:new Date().toISOString(),type:t,file:imp.fileName,sheet:imp.sheet,count:rows.length,prevOpening:t==='opening'?prevOpening:undefined});state.imports=state.imports.slice(0,20);
+  const msg=`Imported ${rows.length} ${IMPORT_TYPES[t].label.toLowerCase()} from ${imp.fileName}`;imp={done:{msg,id,type:t}};changed(msg);render();
+}
+function undoImport(id){const h=(state.imports||[]).find(x=>x.id===id);if(!h)return;let n=0;
+  ['purchases','sales','batches','payments'].forEach(c=>{const b=state[c].length;state[c]=state[c].filter(x=>x.imp!==id);n+=b-state[c].length});
+  if(h.prevOpening){Object.entries(h.prevOpening).forEach(([k,v])=>S().opening[k]=v);n=Object.keys(h.prevOpening).length}
+  h.undone=true;changed('Removed '+n+' imported entries');render()}
+async function readImportFile(file){
+  imp={loading:true,fileName:file.name};render();
+  try{const X=await loadXLSX();const buf=await file.arrayBuffer();const wb=X.read(buf,{type:'array',cellDates:true,raw:false,codepage:65001});
+    imp={fileName:file.name,wb,sheet:null,addVarieties:true,skipDup:true,defaultDir:'receive',defaultKind:'customer',openMode:'replace'};
+    let best=null,bs=-1;wb.SheetNames.forEach(n=>{const rows=X.utils.sheet_to_json(wb.Sheets[n],{header:1,raw:true,defval:'',blankrows:true});if(!rows.length)return;imp.rows=rows;imp.headerRow=null;imp.typeLocked=false;analyze();const sc=Math.max(...Object.values(imp.scores).map(x=>x.score))+Math.min(rows.length,500)/5000;if(sc>bs){bs=sc;best=n}});
+    if(!best)throw new Error('The file has no data');selectSheet(best);
+  }catch(e){imp={error:e.message||String(e),fileName:file.name}}
+  render();
+}
+function selectSheet(n){imp.sheet=n;imp.rows=XLSX.utils.sheet_to_json(imp.wb.Sheets[n],{header:1,raw:true,defval:'',blankrows:true});imp.headerRow=null;imp.typeLocked=false;imp.unitGuess={};analyze();buildAll()}
+function sampleVals(ci,k){if(ci==null)return '';const out=[];for(let r=imp.headerRow+1;r<imp.rows.length&&out.length<3;r++){const v=imp.rows[r][ci];if(v!==''&&v!=null)out.push(v instanceof Date?parseDate(v):String(v))}return out.join(' · ')}
+function previewCols(t){const s=S();return ({
+  purchases:[['Date',r=>r.date?fmtDate(r.date):''],['Farmer / supplier',r=>esc(r.supplier)],['Variety',r=>esc(r.variety||'')],['Bags',r=>num(r.bags)],['Moist %',r=>r.moisture],['Net kg',r=>num(r.netKg)],['Rate',r=>num(r.rate)],['Amount',r=>inr(r.amount)],['Bill no',r=>esc(r.billNo||'auto')]],
+  sales:[['Date',r=>r.date?fmtDate(r.date):''],['Customer',r=>esc(r.customer)],['Item',r=>esc(r.item?itemName(r.item):'')],['Kg',r=>num(r.kg)],['Rate/qtl',r=>num(r.rate)],['Taxable',r=>inr(r.amount)],['GST',r=>r.gst+'% · '+inr(r.tax)],['Total',r=>inr(r.total)],['Invoice',r=>esc(r.invoiceNo||'auto')]],
+  batches:[['Date',r=>r.date?fmtDate(r.date):''],['Variety',r=>esc(r.variety||'')],['Paddy kg',r=>num(r.paddyKg)],['Head rice kg',r=>num(r.headKg)],['Out-turn',r=>r.paddyKg?pct(r.headKg/r.paddyKg*100):''],['Broken',r=>num(r.brokenKg)],['Bran',r=>num(r.branKg)],['Husk',r=>num(r.huskKg)]],
+  payments:[['Date',r=>r.date?fmtDate(r.date):''],['Party',r=>esc(r.party)],['Type',r=>r.kind==='receive'?'Received':'Paid'],['Amount',r=>inr(r.amount)],['Mode',r=>r.mode],['Ref',r=>esc(r.ref)]],
+  parties:[['Name',r=>esc(r.name)],['Type',r=>r.kind==='customer'?'Customer':'Farmer / supplier'],['GSTIN',r=>esc(r.gstin)],['State',r=>esc(STATES[r.stateCode]||r.stateCode)],['Phone',r=>esc(r.phone)],['Address',r=>esc(r.address)]],
+  opening:[['Item',r=>esc(r.item?itemName(r.item):'')],['Quantity kg',r=>num(r.kg)],['Quintals',r=>qtl(r.kg)]]})[t]}
+function vImport(){
+  const hist=(state.imports||[]).slice(0,8);
+  const histHtml=hist.length?`<div class="card" style="margin-top:16px"><h2>Recent imports</h2><div class="tw"><table><thead><tr><th>When</th><th>File</th><th>Type</th><th class="n">Rows</th><th></th></tr></thead><tbody>${hist.map(h=>`<tr><td>${new Date(h.at).toLocaleString('en-IN',{day:'numeric',month:'short',hour:'2-digit',minute:'2-digit'})}</td><td>${esc(h.file)}${h.sheet?' <span class="muted">· '+esc(h.sheet)+'</span>':''}</td><td>${esc(IMPORT_TYPES[h.type].label)}</td><td class="n">${h.count}</td><td class="n">${h.undone?'<span class="tag neutral">Undone</span>':h.type==='parties'?'':`<button class="btn sm danger" data-undo="${h.id}">Undo import</button>`}</td></tr>`).join('')}</tbody></table></div></div>`:'';
+  const tpl=`<div class="row" style="margin-top:10px"><span class="muted" style="font-size:12.5px">Blank templates (optional):</span>${Object.entries(IMPORT_TYPES).map(([k,t])=>`<button class="btn sm" data-tpl="${k}">${t.label}</button>`).join('')}</div>`;
+  const drop=`<div class="card"><label id="dropZone" for="impFile" style="display:block;border:2px dashed var(--border);border-radius:10px;padding:30px 20px;text-align:center;cursor:pointer;background:var(--surface-2)"><div style="font-size:28px">📄</div><div style="font-weight:600;margin:6px 0 2px">Choose an Excel or CSV file, or drop it here</div><div class="muted" style="font-size:13px">.xlsx, .xls or .csv · any column names or order · title rows and total rows are skipped</div><input type="file" id="impFile" accept=".xlsx,.xls,.xlsm,.csv,.ods" style="display:none"></label>${tpl}</div>`;
+  const head=`<h1>Import from Excel</h1><p class="sub">Bring in your existing registers. The app reads the sheet, works out what kind of data it is and which column is which, converts units and dates, and shows every row before anything is saved.</p>`;
+  if(!imp)return head+drop+histHtml;
+  if(imp.loading)return head+`<div class="card"><p>Reading <b>${esc(imp.fileName)}</b>…</p></div>`;
+  if(imp.error)return head+`<div class="card"><p><span class="tag crit">! Could not read ${esc(imp.fileName)}</span></p><p class="muted">${esc(imp.error)}</p><button class="btn" id="impReset">Try another file</button></div>`+histHtml;
+  if(imp.done)return head+`<div class="card"><p><span class="tag good">✓ Done</span> ${esc(imp.done.msg)}.</p><div class="row"><a class="btn primary" href="#${{purchases:'purchases',sales:'sales',batches:'milling',payments:'accounts',parties:'accounts',opening:'inventory'}[imp.done.type]}">View entries</a><button class="btn" id="impReset">Import another file</button>${imp.done.type!=='parties'?`<button class="btn danger" data-undo="${imp.done.id}">Undo this import</button>`:''}</div></div>`+histHtml;
+  const t=IMPORT_TYPES[imp.type],B=imp.built||[],c=k=>B.filter(b=>b.status===k).length;
+  const conf=imp.scores[imp.type].score,confTag=conf>0.6?'<span class="tag good">✓ confident</span>':conf>0.4?'<span class="tag warn">▲ please check</span>':'<span class="tag crit">! low match — check the type and columns</span>';
+  const colOpts=sel=>`<option value="">— not in file —</option>`+imp.cols.map(cn=>`<option value="${cn.i}" ${sel===cn.i?'selected':''}>${cn.letter} · ${esc(cn.name)}</option>`).join('');
+  const used=new Set(Object.values(imp.map).filter(v=>v!=null));const ignored=imp.cols.filter(cn=>!used.has(cn.i)&&cn.st.n);
+  const mapRows=t.fields.map(f=>{const ci=imp.map[f.k];const cf=imp.conf[f.k];return `<tr><td>${esc(f.label)}${f.req?' <span class="tag neutral">required</span>':''}</td><td><select class="btn sm" data-map="${f.k}" style="max-width:260px">${colOpts(ci)}</select></td><td>${f.unit?`<select class="btn sm" data-unit="${f.k}">${[['kg','kg'],['qtl','quintal'],['t','tonne'],['bags','bags ('+S().riceBagKg+' kg)']].map(([u,l])=>`<option value="${u}" ${imp.units[f.k]===u?'selected':''}>${l}</option>`).join('')}</select>${imp.unitGuess&&imp.unitGuess[f.k]&&ci!=null?' <span class="tag warn" title="Header has no unit; guessed from the size of the numbers">guessed</span>':''}`:''}</td><td class="muted" style="max-width:280px;overflow:hidden;text-overflow:ellipsis">${esc(sampleVals(ci))}</td><td>${ci==null?(f.req?'<span class="tag crit">! needed</span>':'<span class="muted">—</span>'):cf==='name'?'<span class="tag good">✓ by name</span>':cf==='similar'?'<span class="tag good">✓ similar name</span>':cf==='values'?'<span class="tag warn">▲ from values</span>':'<span class="tag neutral">you chose</span>'}</td></tr>`}).join('');
+  const opts=[];
+  if(['purchases','sales','batches','opening'].includes(imp.type))opts.push(`<label><input type="checkbox" id="impNewVar" ${imp.addVarieties?'checked':''}> Add unknown varieties to Settings${imp.ctx&&imp.ctx.newVar.size?' <b>('+esc([...imp.ctx.newVar].join(', '))+')</b>':''}</label>`);
+  if(['purchases','sales','batches','payments'].includes(imp.type))opts.push(`<label><input type="checkbox" id="impSkipDup" ${imp.skipDup?'checked':''}> Skip rows already in the app (${c('dup')})</label>`);
+  if(imp.type==='payments')opts.push(`<label>If the file doesn't say: <select class="btn sm" id="impDir"><option value="receive" ${imp.defaultDir==='receive'?'selected':''}>money received</option><option value="pay" ${imp.defaultDir==='pay'?'selected':''}>money paid</option></select></label>`);
+  if(imp.type==='parties')opts.push(`<label>If type isn't given: <select class="btn sm" id="impKind"><option value="customer" ${imp.defaultKind==='customer'?'selected':''}>Customer</option><option value="supplier" ${imp.defaultKind==='supplier'?'selected':''}>Farmer / supplier</option></select></label>`);
+  if(imp.type==='opening')opts.push(`<label><select class="btn sm" id="impOpen"><option value="replace" ${imp.openMode==='replace'?'selected':''}>Replace opening stock for these items</option><option value="add" ${imp.openMode==='add'?'selected':''}>Add to current opening stock</option></select></label>`);
+  const pc=previewCols(imp.type),show=B.slice().sort((a,b)=>({err:0,dup:1,warn:2,ok:3}[a.status]-{err:0,dup:1,warn:2,ok:3}[b.status])||a.n-b.n).slice(0,200);
+  const stTag=b=>b.status==='err'?'<span class="tag crit">✕ Error</span>':b.status==='dup'?'<span class="tag neutral">Already in app</span>':b.status==='warn'?'<span class="tag warn">▲ Check</span>':'<span class="tag good">✓ Ready</span>';
+  const n=importCount();
+  return head+`<div class="card"><div class="sec-h"><div><h2 style="margin:0">${esc(imp.fileName)}</h2><div class="muted" style="font-size:12.5px">${imp.rows.length} rows read · headers found on row ${imp.headerRow+1}${imp.skipped?' · '+imp.skipped+' total/blank rows skipped':''}</div></div><button class="btn sm" id="impReset">Choose another file</button></div>
+   <div class="form" style="grid-template-columns:repeat(auto-fill,minmax(220px,1fr))">
+    ${imp.wb.SheetNames.length>1?`<div class="f"><label>Sheet</label><select id="impSheet">${imp.wb.SheetNames.map(nm=>`<option ${nm===imp.sheet?'selected':''}>${esc(nm)}</option>`).join('')}</select></div>`:''}
+    <div class="f"><label>This file contains</label><select id="impType">${Object.entries(IMPORT_TYPES).map(([k,x])=>`<option value="${k}" ${k===imp.type?'selected':''}>${x.label}</option>`).join('')}</select><div class="hint">${imp.typeLocked?'Chosen by you':'Detected automatically'} · ${confTag}</div></div>
+    <div class="f"><label>Header row</label><select id="impHdr">${imp.rows.slice(0,20).map((r,i)=>`<option value="${i}" ${i===imp.headerRow?'selected':''}>Row ${i+1}: ${esc(r.filter(v=>v!=='').slice(0,4).map(v=>v instanceof Date?parseDate(v):String(v)).join(' | ').slice(0,50))}</option>`).join('')}</select></div>
+   </div></div>
+  <div class="card" style="margin-top:16px"><h2>Column matching</h2><p class="muted" style="margin:-6px 0 12px;font-size:13px">Matched from the column names and the values inside them. Change any dropdown if a match is wrong — the preview updates instantly.</p>
+   <div class="tw" style="max-height:none"><table><thead><tr><th>App field</th><th>Excel column</th><th>Unit</th><th>Sample values</th><th>Match</th></tr></thead><tbody>${mapRows}</tbody></table></div>
+   ${ignored.length?`<p class="muted" style="font-size:12.5px;margin:10px 0 0">Not used: ${ignored.map(cn=>esc(cn.name)).join(', ')}</p>`:''}
+   ${opts.length?`<div class="row" style="margin-top:12px;gap:18px">${opts.join('')}</div>`:''}</div>
+  <div class="card" style="margin-top:16px"><div class="sec-h"><h2 style="margin:0">Check before importing</h2><div class="row"><span class="tag good">✓ ${c('ok')} ready</span><span class="tag warn">▲ ${c('warn')} to check</span><span class="tag neutral">${c('dup')} already in app</span><span class="tag crit">✕ ${c('err')} errors</span></div></div>
+   <div class="tw"><table><thead><tr><th>Row</th><th>Status</th>${pc.map(x=>`<th>${x[0]}</th>`).join('')}<th>Notes</th></tr></thead><tbody>${show.map(b=>`<tr><td class="muted">${b.n}</td><td>${stTag(b)}</td>${pc.map(x=>{let v='';try{v=x[1](b.rec)}catch(e){}return `<td>${v}</td>`}).join('')}<td style="white-space:normal;min-width:220px;font-size:12.5px">${[...b.e.map(m=>'<span style="color:var(--crit)">'+esc(m)+'</span>'),...b.w.map(esc),...(b.info||[]).map(m=>'<span class="muted">'+esc(m)+'</span>')].join('<br>')}</td></tr>`).join('')}</tbody></table></div>
+   ${B.length>200?`<p class="muted" style="font-size:12px">Showing 200 of ${B.length} rows (problems first).</p>`:''}
+   <div class="row" style="margin-top:14px"><button class="btn primary" id="impGo" ${n?'':'disabled'}>Import ${n} ${n===1?'row':'rows'}</button>${c('err')?`<span class="muted" style="font-size:12.5px">${c('err')} rows with errors will be left out — fix the column matching or the file and re-import them later.</span>`:''}</div></div>`+histHtml;
+}
+AFTER.import=()=>{
+  const f=$('#impFile');if(f)f.onchange=()=>{if(f.files[0])readImportFile(f.files[0])};
+  const dz=$('#dropZone');if(dz){dz.ondragover=e=>{e.preventDefault();dz.style.borderColor='var(--accent)'};dz.ondragleave=()=>dz.style.borderColor='';dz.ondrop=e=>{e.preventDefault();const fl=e.dataTransfer.files[0];if(fl)readImportFile(fl)}}
+  document.querySelectorAll('[data-tpl]').forEach(b=>b.onclick=()=>{const t=IMPORT_TYPES[b.dataset.tpl];exportCSV('template-'+b.dataset.tpl+'.csv',[t.fields.map(x=>x.label+(x.unit?' (kg)':''))])});
+  document.querySelectorAll('[data-undo]').forEach(b=>b.onclick=()=>confirmBtn(b,()=>undoImport(b.dataset.undo)));
+  const rs=$('#impReset');if(rs)rs.onclick=()=>{imp=null;render()};
+  if(!imp||!imp.rows)return;
+  const re=()=>{buildAll();render()};
+  const sh=$('#impSheet');if(sh)sh.onchange=()=>{selectSheet(sh.value);render()};
+  $('#impType').onchange=e=>{imp.type=e.target.value;imp.typeLocked=true;imp.unitGuess={};applyAuto();re()};
+  $('#impHdr').onchange=e=>{imp.headerRow=+e.target.value;const tl=imp.typeLocked,ty=imp.type;analyze();if(tl){imp.type=ty;applyAuto()}re()};
+  document.querySelectorAll('[data-map]').forEach(sl=>sl.onchange=()=>{const k=sl.dataset.map,v=sl.value===''?null:+sl.value;Object.keys(imp.map).forEach(o=>{if(o!==k&&imp.map[o]===v&&v!=null)imp.map[o]=null});imp.map[k]=v;imp.conf[k]='user';const fd=IMPORT_TYPES[imp.type].fields.find(x=>x.k===k);if(fd.unit&&v!=null){const u=unitFromHeader(imp.cols[v].name);if(u)imp.units[k]=u;if(imp.unitGuess)delete imp.unitGuess[k]}re()});
+  document.querySelectorAll('[data-unit]').forEach(sl=>sl.onchange=()=>{imp.units[sl.dataset.unit]=sl.value;if(imp.unitGuess)delete imp.unitGuess[sl.dataset.unit];re()});
+  const nv=$('#impNewVar');if(nv)nv.onchange=()=>{imp.addVarieties=nv.checked;re()};
+  const sd=$('#impSkipDup');if(sd)sd.onchange=()=>{imp.skipDup=sd.checked;render()};
+  const dr=$('#impDir');if(dr)dr.onchange=()=>{imp.defaultDir=dr.value;re()};
+  const kd=$('#impKind');if(kd)kd.onchange=()=>{imp.defaultKind=kd.value;re()};
+  const op=$('#impOpen');if(op)op.onchange=()=>{imp.openMode=op.value;render()};
+  $('#impGo').onclick=commitImport;
+};
+
+/* ---------- licence & expiry ---------- */
+const LIC_PUB={"kty":"EC","x":"Hfq--lKuI36zhetQJSZb4mSQD0gwx6h_fHuuN34SLxM","y":"QbHrroRl93Lmmbl_h2BDKUC0luDQ6l_1ORtsBSfwbyY","crv":"P-256"};
+const PLAN_NAMES={trial:'Trial',demo:'Demo',monthly:'Monthly',annual:'Annual',full:'Full'};
+const licCache={},licPending={};
+function b64uBytes(s){s=String(s).replace(/-/g,'+').replace(/_/g,'/');while(s.length%4)s+='=';return Uint8Array.from(atob(s),c=>c.charCodeAt(0))}
+function addDays(iso,n){const d=new Date((iso||today())+'T00:00:00');d.setDate(d.getDate()+n);return d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0')+'-'+String(d.getDate()).padStart(2,'0')}
+async function verifyLicence(key){
+  key=String(key||'').replace(/\s+/g,'');if(!key)return null;if(licCache[key])return licCache[key];
+  let res;
+  try{const parts=key.split('.');if(parts.length!==3||parts[0]!=='RMM1')throw new Error('This is not a Rice Mill Manager licence key');
+    const payload=JSON.parse(new TextDecoder().decode(b64uBytes(parts[1])));if(!payload.e||!/^\d{4}-\d{2}-\d{2}$/.test(payload.e))throw new Error('Licence key is damaged');
+    if(window.crypto&&crypto.subtle){const k=await crypto.subtle.importKey('jwk',LIC_PUB,{name:'ECDSA',namedCurve:'P-256'},false,['verify']);
+      const ok=await crypto.subtle.verify({name:'ECDSA',hash:'SHA-256'},k,b64uBytes(parts[2]),new TextEncoder().encode(parts[0]+'.'+parts[1]));res=ok?{ok:true,payload}:{ok:false,err:'Licence key is not genuine'}}
+    else{let stored=null;try{stored=JSON.parse(localStorage.getItem('rm-lic-'+key.slice(-32))||'null')}catch(e){}
+      if(stored)res=stored;else if(BUILD==='pwa'&&navigator.onLine){const r=await api('api/licence',{key});res=r.ok?{ok:true,payload:r.payload}:{ok:false,err:r.error||'Licence key is not genuine'}}else res={ok:false,err:'Licence can be checked once this device connects to the mill server',retry:true}}
+  }catch(e){res={ok:false,err:e.message||String(e),retry:/reachable/.test(e.message||'')}}
+  if(!res.retry)licCache[key]=res;if(res.ok)try{localStorage.setItem('rm-lic-'+key.slice(-32),JSON.stringify(res))}catch(e){}
+  return res;
+}
+function effToday(){const t=today(),ls=S().lastSeen||'';return ls>t?ls:t}
+function touchLastSeen(){const t=today();if(!S().lastSeen||t>S().lastSeen){S().lastSeen=t;return true}return false}
+function licenceStatus(){
+  const s=S(),eff=effToday(),key=String(s.licence||'').replace(/\s+/g,'');let v=null,note='';
+  if(key){v=licCache[key];if(!v&&!licPending[key]){licPending[key]=1;verifyLicence(key).then(r=>{delete licPending[key];if(r&&!busyTyping())render()})}}
+  let end,plan,to=null,src='trial';
+  if(v&&v.ok&&v.payload.m&&compact(v.payload.m)!==compact(s.millName))note='The licence key is for "'+v.payload.m+'" but the mill name is "'+s.millName+'". Change Mill name in Settings to match.';
+  else if(v&&!v.ok)note=v.err;
+  if(v&&v.ok&&!note){end=v.payload.e;plan=v.payload.p||'full';to=v.payload.m;src='licence'}
+  else{end=addDays(s.installedOn,TRIAL_DAYS-1);plan='trial'}
+  const left=daysBetween(eff,end);return {end,plan,to,src,left,expired:left<0,warn:left>=0&&left<=7,note,key}
+}
+function licenceBanner(){const L=licenceStatus(),w=L.src==='licence'?'Licence':'Free trial';
+  if(L.expired)return '<div class="lic-banner crit"><b>'+w+' ended on '+fmtLong(L.end)+'.</b> The app is now view-and-export only — all your data is safe. Enter a new licence key in <a href="#settings">Settings → Licence</a>.</div>';
+  if(L.warn)return '<div class="lic-banner warn"><b>'+w+' ends on '+fmtLong(L.end)+'</b> ('+(L.left===0?'today':L.left+' day'+(L.left>1?'s':'')+' left')+'). Renew in <a href="#settings">Settings → Licence</a>.</div>';
+  return ''}
+function licenceCard(){const L=licenceStatus(),s=S();
+  const st=L.expired?'<span class="tag crit">! Ended</span>':L.warn?'<span class="tag warn">▲ Ends soon</span>':'<span class="tag good">✓ Active</span>';
+  return '<div class="card" id="licCard"><h2>Licence</h2><div class="calc" style="margin-top:0">'+
+   '<div><div class="l">Status</div><div class="v">'+st+'</div></div>'+
+   '<div><div class="l">'+(L.src==='licence'?'Licensed to':'Mode')+'</div><div class="v">'+(L.src==='licence'?esc(L.to):'Free trial ('+TRIAL_DAYS+' days)')+'</div></div>'+
+   '<div><div class="l">Plan</div><div class="v">'+esc(PLAN_NAMES[L.plan]||L.plan)+'</div></div>'+
+   '<div><div class="l">'+(L.expired?'Ended on':'Valid until')+'</div><div class="v">'+fmtLong(L.end)+'</div></div>'+
+   '<div><div class="l">'+(L.expired?'Days since end':'Days left')+'</div><div class="v">'+(L.left===0?'Ends today':Math.abs(L.left))+'</div></div></div>'+
+   (L.note?'<p style="color:var(--warn);font-size:13px;margin:10px 0 0">▲ '+esc(L.note)+'</p>':'')+
+   '<div class="form" style="margin-top:12px;grid-template-columns:minmax(0,1fr) auto"><div class="f"><label>Licence key</label><input id="licKey" value="'+esc(s.licence||'')+'" placeholder="Paste the key you received — starts with RMM1." spellcheck="false" autocomplete="off" style="font-family:ui-monospace,monospace;font-size:12px"></div><div class="f" style="align-self:end"><button class="btn primary ro-ok" id="licApply">Apply key</button></div></div>'+
+   '<p class="muted" style="font-size:12px;margin:8px 0 0">The key must be issued for this mill name: <b>'+esc(s.millName)+'</b>. After the end date the app becomes view-and-export only; nothing is deleted.'+(BUILD==='pwa'?' A key applied on one device reaches every synced device.':'')+'</p></div>'}
+function bindLicenceCard(){const b=$('#licApply');if(!b)return;b.onclick=async()=>{const k=V('licKey').replace(/\s+/g,'');
+  if(!k){S().licence='';changed('Licence key removed');render();return}
+  b.disabled=true;b.textContent='Checking…';const r=await verifyLicence(k);b.disabled=false;b.textContent='Apply key';
+  if(!r||!r.ok){toast((r&&r.err)||'Licence key is not valid');return}
+  if(r.payload.m&&compact(r.payload.m)!==compact(S().millName)){toast('This key is for "'+r.payload.m+'" — set Mill name to match, then apply again');return}
+  if(r.payload.e<effToday()){toast('This key ended on '+fmtLong(r.payload.e)+' — ask for a renewed key');return}
+  S().licence=k;changed('Licence applied — valid until '+fmtLong(r.payload.e)+(BUILD==='pwa'?'':'. Press Save to keep it.'));render()}}
+const RO_IDS=new Set(['invCsv','ledgerCsv','pCsv','mCsv','sCsv','accCsv','hsnCsv','regCsv','tDl','tCopy','tS','tP','tY','tR','tCo','rCopy','rMonth','gMonth','mdClose','docDl','docPrint','stExport','impReset','mdCopy','sySync','syTest','syUrl','syKey','syDev','syInstall','licKey','licApply']);
+function roAllowed(el){if(view==='calculators')return true;if(el.matches('[data-path="millName"]'))return true;if(el.closest('#licCard'))return true;if(el.id&&RO_IDS.has(el.id))return true;if(el.matches('[data-stmt],[data-inv],[data-slip],[data-acc],[data-p]')||el.closest('.seg'))return true;return false}
+['click','change','drop'].forEach(ev=>document.addEventListener(ev,e=>{
+  if(!document.body.classList.contains('ro'))return;const el=e.target&&e.target.closest&&e.target.closest('button,input,select,textarea,label,#dropZone');
+  if(!el||!el.closest('#main,#modal')||roAllowed(el))return;
+  if(ev==='click'&&/^(INPUT|SELECT|TEXTAREA)$/.test(el.tagName)&&el.type!=='checkbox'&&el.type!=='file')return;
+  e.preventDefault();e.stopImmediatePropagation();toast('Licence ended — view and export only. Renew in Settings → Licence.')},true));
+
+/* ---------- shared helpers ---------- */
+function confirmBtn(btn,fn){if(btn.dataset.armed){fn();return}btn.dataset.armed='1';const t=btn.textContent;btn.textContent='Click again to confirm';setTimeout(()=>{if(btn.isConnected){btn.textContent=t;delete btn.dataset.armed}},3000)}
+function bindDeletes(){document.querySelectorAll('[data-del]').forEach(b=>b.onclick=()=>confirmBtn(b,()=>{const [coll,id]=b.dataset.del.split(':');state[coll]=state[coll].filter(x=>x.id!==id);changed('Entry deleted');render()}))}
+function csvStr(rows){return rows.map(r=>r.map(c=>{c=String(c==null?'':c);return /[",\n]/.test(c)?'"'+c.replace(/"/g,'""')+'"':c}).join(',')).join('\n')}
+function exportCSV(name,rows){exportFile(name,csvStr(rows),'text/csv')}
+function exportTable(table,name){const rows=[...table.querySelectorAll('tr')].map(tr=>[...tr.children].map(td=>td.textContent.trim()));exportCSV(name,rows)}
+async function exportFile(name,text,type){
+  if(BUILD==='pwa'){try{const a=document.createElement('a');a.href=URL.createObjectURL(new Blob([text],{type}));a.download=name;document.body.appendChild(a);a.click();setTimeout(()=>{URL.revokeObjectURL(a.href);a.remove()},1000);toast('Downloaded '+name);return}catch(e){}}
+  if(downloadsApi){try{await downloadsApi.save({filename:name,data:new Blob([text],{type})});return}catch(e){if(e&&/declin|cancel|abort/i.test(e.code||e.message||''))return}}
+  showText(name+' — copy the text below',text);
+}
+function showText(title,text,restore){
+  $('#modal').innerHTML=`<div class="modal"><div class="card"><div class="sec-h"><h2>${esc(title)}</h2><button class="btn sm" id="mdClose">Close</button></div><textarea id="mdText">${esc(text)}</textarea><div class="row" style="margin-top:10px">${restore?'<button class="btn primary" id="mdRestore">Restore</button>':'<button class="btn primary" id="mdCopy">Copy</button>'}</div></div></div>`;
+  $('#mdClose').onclick=()=>$('#modal').innerHTML='';
+  const c=$('#mdCopy');if(c)c.onclick=()=>{navigator.clipboard.writeText($('#mdText').value).then(()=>toast('Copied'),()=>{$('#mdText').select();toast('Press Ctrl+C to copy')})};
+  const r=$('#mdRestore');if(r)r.onclick=()=>{try{const d=JSON.parse($('#mdText').value);if(!d.settings||!d.purchases)throw 0;d.savedAt=state.savedAt;{const c=S(),n=d.settings;if(c.installedOn&&(!n.installedOn||c.installedOn<n.installedOn))n.installedOn=c.installedOn;if((c.lastSeen||'')>(n.lastSeen||''))n.lastSeen=c.lastSeen;if(c.licence)n.licence=c.licence}state=d;$('#modal').innerHTML='';changed('Backup restored');render()}catch(e){toast('That is not a valid backup')}};
+}
+
+/* ---------- boot ---------- */
+window.addEventListener('online',()=>{renderSave();if(BUILD==='pwa')syncNow()});window.addEventListener('offline',renderSave);
+if(BUILD==='pwa')bootPwa();else{touchLastSeen();shell();window.addEventListener('hashchange',route);route();}
+if(window.matchMedia)matchMedia('(prefers-color-scheme: dark)').addEventListener('change',()=>render());
+})();
+</script>
+</body></html>
